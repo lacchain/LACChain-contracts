@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-[Configuration Guide]("./docs/tech/configuration.md")
+[Configuration Guide](docs/tech/configuration.md)
 
 ## Deploying DidRegistry Smart Contract:
 
