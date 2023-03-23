@@ -1,6 +1,8 @@
 # LACPass Smart Contracts
 
-## Gettins started
+## Getting Started
+
+[Configuration Guide]("./docs/tech/configuration.md")
 
 ## Deploying DidRegistry Smart Contract:
 
