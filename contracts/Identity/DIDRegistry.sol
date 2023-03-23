@@ -10,6 +10,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
     using SafeMath for uint256;
 
     mapping(address => address[]) public controllers;
+    mapping(address => mapping(bytes32 => mapping(address => uint)))
+        public delegates;
     mapping(address => DIDConfig) private configs;
     mapping(address => uint) public changed;
     mapping(address => uint) public nonce;
@@ -330,5 +332,131 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
 
     function disableKeyRotation(address identity) external override {
         disableKeyRotation(identity, _msgSender());
+    }
+
+    function validDelegate(
+        address identity,
+        bytes32 delegateType,
+        address delegate
+    ) public view returns (bool) {
+        uint validity = delegates[identity][
+            keccak256(abi.encode(delegateType))
+        ][delegate];
+        return (validity > block.timestamp);
+    }
+
+    function addDelegate(
+        address identity,
+        address actor,
+        bytes32 delegateType,
+        address delegate,
+        uint validity
+    ) internal onlyController(identity, actor) {
+        delegates[identity][keccak256(abi.encode(delegateType))][delegate] =
+            block.timestamp +
+            validity;
+        emit DIDDelegateChanged(
+            identity,
+            delegateType,
+            delegate,
+            block.timestamp + validity,
+            changed[identity]
+        );
+        changed[identity] = block.number;
+    }
+
+    function addDelegate(
+        address identity,
+        bytes32 delegateType,
+        address delegate,
+        uint validity
+    ) public {
+        addDelegate(identity, msg.sender, delegateType, delegate, validity);
+    }
+
+    function addDelegateSigned(
+        address identity,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS,
+        bytes32 delegateType,
+        address delegate,
+        uint validity
+    ) public {
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0),
+                this,
+                nonce[identityController(identity)],
+                identity,
+                "addDelegate",
+                delegateType,
+                delegate,
+                validity
+            )
+        );
+        addDelegate(
+            identity,
+            checkSignature(identity, sigV, sigR, sigS, hash),
+            delegateType,
+            delegate,
+            validity
+        );
+    }
+
+    function revokeDelegate(
+        address identity,
+        address actor,
+        bytes32 delegateType,
+        address delegate
+    ) internal onlyController(identity, actor) {
+        delegates[identity][keccak256(abi.encode(delegateType))][
+            delegate
+        ] = block.timestamp;
+        emit DIDDelegateChanged(
+            identity,
+            delegateType,
+            delegate,
+            block.timestamp,
+            changed[identity]
+        );
+        changed[identity] = block.number;
+    }
+
+    function revokeDelegate(
+        address identity,
+        bytes32 delegateType,
+        address delegate
+    ) public {
+        revokeDelegate(identity, msg.sender, delegateType, delegate);
+    }
+
+    function revokeDelegateSigned(
+        address identity,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS,
+        bytes32 delegateType,
+        address delegate
+    ) public {
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0),
+                this,
+                nonce[identityController(identity)],
+                identity,
+                "revokeDelegate",
+                delegateType,
+                delegate
+            )
+        );
+        revokeDelegate(
+            identity,
+            checkSignature(identity, sigV, sigR, sigS, hash),
+            delegateType,
+            delegate
+        );
     }
 }

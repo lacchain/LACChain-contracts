@@ -23,6 +23,14 @@ interface IDIDRegistry {
         uint previousChange
     );
 
+    event DIDDelegateChanged(
+        address indexed identity,
+        bytes32 delegateType,
+        address delegate,
+        uint validTo,
+        uint previousChange
+    );
+
     function addController(address identity, address controller) external;
 
     function removeController(address identity, address controller) external;
