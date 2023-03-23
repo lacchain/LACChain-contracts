@@ -15,8 +15,9 @@ contract DIDRegistryRecoverable is DIDRegistry {
         uint _minKeyRotationTime,
         uint _maxAttempts,
         uint _minControllers,
-        uint _resetSeconds
-    ) DIDRegistry(_minKeyRotationTime) {
+        uint _resetSeconds,
+        address trustedForwarderAddr
+    ) DIDRegistry(_minKeyRotationTime, trustedForwarderAddr) {
         maxAttempts = _maxAttempts;
         minControllers = _minControllers;
         resetSeconds = _resetSeconds;

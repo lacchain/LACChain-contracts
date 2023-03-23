@@ -16,7 +16,10 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
 
     uint private minKeyRotationTime;
 
-    constructor(uint _minKeyRotationTime) {
+    constructor(
+        uint _minKeyRotationTime,
+        address trustedForwarderAddr
+    ) BaseRelayRecipient(trustedForwarderAddr) {
         minKeyRotationTime = _minKeyRotationTime;
     }
 

@@ -9,8 +9,11 @@ abstract contract BaseRelayRecipient {
     /*
      * Forwarder singleton we accept calls from
      */
-    address internal trustedForwarder =
-        0xa4B5eE2906090ce2cDbf5dfff944db26f397037D;
+    address internal trustedForwarder;
+
+    constructor(address trustedForwarderAddr) {
+        trustedForwarder = trustedForwarderAddr;
+    }
 
     /**
      * return the sender of this call.

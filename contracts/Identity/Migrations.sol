@@ -14,7 +14,9 @@ contract Migrations is BaseRelayRecipient {
         if (_msgSender() == owner) _;
     }
 
-    constructor() {
+    constructor(
+        address trustedForwarderAddr
+    ) BaseRelayRecipient(trustedForwarderAddr) {
         owner = _msgSender();
     }
 
