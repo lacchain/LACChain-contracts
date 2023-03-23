@@ -2,12 +2,7 @@
 
 ## Getting Started
 
-[Configuration Guide](docs/tech/configuration.md)
-
-## Deploying DidRegistry Smart Contract:
-
-```shell
-yarn hardhat run --network lacchain scripts/deployDidRegistry.ts
-```
+- [Configuration Guide](docs/tech/configuration.md)
+- [Deployment Guide](docs/tech/deployment.md)
 
 ## License
