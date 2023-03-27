@@ -1,0 +1,10 @@
+# Smart Contracts Error Messages
+
+## Credential Registry
+
+- ER -> Expired Registry
+- RAR -> Registry Already Exists
+- DNA -> Delegate Not Authorized
+- DAA -> Delegate Already Authorized
+- CDNS -> Custom Did Registry Not Set
+- DTNS -> Delegate Type Not Set (means the delegate type is not registered tied to the "identity" on this contract)
