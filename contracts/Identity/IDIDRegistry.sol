@@ -138,4 +138,10 @@ interface IDIDRegistry {
     function enableKeyRotation(address identity, uint keyRotationTime) external;
 
     function disableKeyRotation(address identity) external;
+
+    function validDelegate(
+        address identity,
+        bytes32 delegateType,
+        address delegate
+    ) external view returns (bool);
 }
