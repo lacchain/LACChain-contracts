@@ -21,7 +21,9 @@ interface ICredentialRegistry {
     /**
      * Once revoked it will not longer be valid
      */
-    function registerChange(bytes32 digest, uint256 iat, uint256 exp) external;
+    function issue(bytes32 digest, uint256 exp, address identity) external;
+
+    function revoke(bytes32 digest, uint256 exp, address identity) external;
 
     function getDetails(
         address issuer,
@@ -34,15 +36,78 @@ interface ICredentialRegistry {
      * the current timestamp; this means that the data has just expired because of the time has passed or because
      * the data has been revoked
      */
-    function isValid(
+    function isValidCredential(
         address issuer,
         bytes32 digest
     ) external view returns (bool);
 
-    event CredentialChange(
-        bytes32 indexed digest,
-        address by,
-        uint iat,
-        uint exp
-    );
+    event NewIssuance(bytes32 indexed digest, address by, uint iat, uint exp);
+
+    /**
+     * Adding iat to the log allows verfying if the credential was actually issued onchan in the past(iat>0) or 
+     just revoked (iat = 0)
+     */
+    event NewRevocation(bytes32 indexed digest, address by, uint iat, uint exp);
+
+    /**
+     * Optional way to register a data change. In this case the delegate sends the data on behalf of the main actor
+     *
+     */
+    function issueByDelegate(
+        address identity,
+        bytes32 digest,
+        uint256 exp
+    ) external;
+
+    function _revokeByDelegate(
+        address identity,
+        bytes32 digest,
+        uint256 exp
+    ) external;
+
+    /**
+     * @param delegateType: must coincide with some delegate that was registered under the "identity" by using the method "addDelegateType"
+     * Optional way to register a data change. In this case the delegate sends the data on behalf of the main actor
+     */
+    function issueByDelegateWithCustomType(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        uint256 exp
+    ) external;
+
+    function _revokeByDelegateWithCustomType(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        uint256 exp
+    ) external;
+
+    /**
+     * Every user is able to just add one didRegistry (address, delegateType).
+     * Main identity only can add a didRegistry
+     * By adding a didRegistry tied to a user the verification about delegates goes always through that contract
+     */
+    function addDidRegistry(address didRegistryAddress) external;
+
+    /**
+     * removes the custom didRegistry if exists otherwise reverts
+     */
+    function removeDidRegistry() external;
+
+    /**
+     * Returns the didRegistry and delegateType set for an identity
+     */
+    function getDidRegistry(
+        address identity
+    ) external view returns (address didRegistryAddress);
+
+    function addDelegateType(bytes32 delegateType) external;
+
+    function removeDelegate(bytes32 delegateType) external;
+
+    function isValidDelegateType(
+        address identity,
+        bytes32 delegateType
+    ) external view returns (bool);
 }
