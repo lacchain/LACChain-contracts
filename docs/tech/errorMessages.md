@@ -9,3 +9,4 @@
 - DTNS -> Delegate Type Not Set (means the delegate type is not registered tied to the "identity" on this contract)
 - ID -> Invalid Delegate
 - IC -> Invalid Controller
+- SCF -> Static Call Failed

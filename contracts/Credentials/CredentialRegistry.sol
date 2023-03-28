@@ -93,15 +93,7 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
         bytes32 digest,
         uint256 exp
     ) external {
-        // resolve didRegistry to call
-        address registryAddress = getDidRegistry(identity);
-        require(isValidDelegateType(identity, delegateType), "DTNS");
-        _validateDelegate(
-            registryAddress,
-            identity,
-            delegateType,
-            _msgSender()
-        );
+        _validateDelegateWithCustomType(delegateType, identity);
         _issue(identity, digest, exp);
     }
 
@@ -126,14 +118,7 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
         bytes32 digest,
         uint256 exp
     ) external {
-        address registryAddress = getDidRegistry(identity);
-        require(isValidDelegateType(identity, delegateType), "DTNS");
-        _validateDelegate(
-            registryAddress,
-            identity,
-            defaultDelegateType,
-            _msgSender()
-        );
+        _validateDelegateWithCustomType(delegateType, identity);
         _revoke(identity, digest, exp);
     }
 
@@ -165,6 +150,21 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
             abi.encodeWithSignature("identityController(address)", identity)
         );
         require(success && abi.decode(data, (address)) == controller, "IC");
+    }
+
+    function _validateDelegateWithCustomType(
+        bytes32 delegateType,
+        address identity
+    ) private view {
+        // resolve didRegistry to call
+        address registryAddress = getDidRegistry(identity);
+        require(isValidDelegateType(identity, delegateType), "DTNS");
+        _validateDelegate(
+            registryAddress,
+            identity,
+            delegateType,
+            _msgSender()
+        );
     }
 
     function addDidRegistry(address didRegistryAddress) external {
