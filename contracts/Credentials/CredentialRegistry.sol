@@ -164,7 +164,7 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
         (bool success, bytes memory data) = didRegistry.staticcall(
             abi.encodeWithSignature("identityController(address)", identity)
         );
-        require(success && abi.decode(data, (address)) == controller, "ID");
+        require(success && abi.decode(data, (address)) == controller, "IC");
     }
 
     function addDidRegistry(address didRegistryAddress) external {
