@@ -194,13 +194,24 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
     }
 
     function addDelegateType(bytes32 delegateType) external {
-        require(!didDelegateTypes[_msgSender()][delegateType], "DAA");
-        didDelegateTypes[_msgSender()][delegateType] = true;
+        address by = _msgSender();
+        _delegateTypeChange(delegateType, by, true);
     }
 
-    function removeDelegate(bytes32 delegateType) external {
-        require(didDelegateTypes[_msgSender()][delegateType], "DAA");
-        didDelegateTypes[_msgSender()][delegateType] = false;
+    function removeDelegateType(bytes32 delegateType) external {
+        address by = _msgSender();
+        _delegateTypeChange(delegateType, by, false);
+    }
+
+    function _delegateTypeChange(
+        bytes32 delegateType,
+        address by,
+        bool status
+    ) private {
+        address by = _msgSender();
+        require(didDelegateTypes[_msgSender()][delegateType] != status, "DAA");
+        didDelegateTypes[_msgSender()][delegateType] = status;
+        emit NewDelegateTypeChange(delegateType, by, status);
     }
 
     function isValidDelegateType(

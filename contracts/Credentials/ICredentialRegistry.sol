@@ -50,6 +50,16 @@ interface ICredentialRegistry {
     event NewRevocation(bytes32 indexed digest, address by, uint iat, uint exp);
 
     /**
+    * if status true, the added delegate type will be valid for just all delegates under "by" (which represents an identifier for the
+    main identity)
+     */
+    event NewDelegateTypeChange(
+        bytes32 indexed delegateType,
+        address indexed by,
+        bool status
+    );
+
+    /**
      * Optional way to register a data change. In this case the delegate sends the data on behalf of the main actor
      *
      */
@@ -84,9 +94,9 @@ interface ICredentialRegistry {
     ) external;
 
     /**
-     * Every user is able to just add one didRegistry (address, delegateType).
-     * Main identity only can add a didRegistry
-     * By adding a didRegistry tied to a user the verification about delegates goes always through that contract
+     * Every entity is able to just add one didRegistry (address).
+     * Main identity is the only that that can add a didRegistry only valid for him
+     * By adding a didRegistry tied to a entity the verification about delegates goes always through that contract
      */
     function addDidRegistry(address didRegistryAddress) external;
 
@@ -104,7 +114,7 @@ interface ICredentialRegistry {
 
     function addDelegateType(bytes32 delegateType) external;
 
-    function removeDelegate(bytes32 delegateType) external;
+    function removeDelegateType(bytes32 delegateType) external;
 
     function isValidDelegateType(
         address identity,
