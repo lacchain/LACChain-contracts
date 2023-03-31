@@ -11,3 +11,14 @@
 - IC -> Invalid Controller
 - SCF -> Static Call Failed
 - IOHCS -> Invalid OnHold Change Status
+
+## PKD
+
+- TLNO -> Trusted List Not Onboarded
+- TLAO -> Trusted List Already Onboarded
+- TLAA -> Trusted List Already Added
+- IET -> Invalid Expiration Time
+- TLNA -> Trusted List Not Added
+- ETL -> Expired Trusted List
+- IP -> Invalid Period
+- DDMODE -> Did Does Not Match or Does Not Exist

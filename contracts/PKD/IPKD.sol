@@ -3,12 +3,20 @@
 pragma solidity 0.8.18;
 
 interface IPKD {
+    event DepthChange(address indexed tl, uint8 depth, uint256 prevBlock);
+    event TlConfigChange(
+        address indexed tl,
+        string did,
+        uint8 depth,
+        uint256 prevBlock
+    );
+    event MemberOnboarded(address indexed tl, uint256 prevBlock);
     event PkAdded(
         address indexed parentTl,
         address indexed tl,
         string did,
-        uint32 iat,
-        uint32 exp,
+        uint256 iat,
+        uint256 exp,
         uint256 prevBlock
     );
 
@@ -16,8 +24,8 @@ interface IPKD {
         address indexed parentTl,
         address indexed tl,
         string did,
-        uint32 iat,
-        uint32 exp,
+        uint256 iat,
+        uint256 exp,
         uint256 prevBlock
     );
 
@@ -25,21 +33,42 @@ interface IPKD {
         address indexed parentTl,
         address indexed tl,
         string did,
-        uint32 exp,
+        uint256 exp,
         uint256 prevBlock
     );
 
-    function addRootLevelsOfTrust(uint8 depth) external;
+    function configRootTl(string memory did, uint8 depth) external;
 
-    function associateDidWithTl(uint8 depth, string memory didStr) external;
+    function configTl(uint8 depth, string memory didStr) external;
 
     function approveTlCandidate(address tl) external;
 
-    function addRootTl(address tl, string memory did, uint32 exp) external;
+    /**
+     * @param period: given in seconds
+     */
+    function addRootTl(address tl, string memory did, uint256 period) external;
 
-    function addTl(address tl, string memory did, uint32 exp) external;
+    function updateRootTl(
+        address tl,
+        string memory did,
+        uint256 period
+    ) external;
 
-    function updateTl(address tl, string memory did, uint32 exp) external;
+    /**
+     * @param period: given in seconds
+     */
+    function addTl(address tl, string memory did, uint256 period) external;
 
+    /**
+     * @param period: given in seconds
+     */
+    function updateTl(address tl, string memory did, uint256 period) external;
+
+    /**
+     * The removed tl must be in onboarded in this contract.
+     * It is not necessary to add a tl as a prior step before revoking it.
+     */
     function revokeTl(address tl, string memory did) external;
+
+    function revokeRootTl(address tl, string memory did) external;
 }
