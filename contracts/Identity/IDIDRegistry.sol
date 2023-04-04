@@ -20,6 +20,7 @@ interface IDIDRegistry {
         bytes name,
         bytes value,
         uint validTo,
+        uint changeTime,
         uint previousChange
     );
 
@@ -66,7 +67,8 @@ interface IDIDRegistry {
     function revokeAttribute(
         address identity,
         bytes memory name,
-        bytes memory value
+        bytes memory value,
+        uint256 revokeDeltaTime
     ) external;
 
     function revokeAttributeSigned(
@@ -75,7 +77,8 @@ interface IDIDRegistry {
         bytes32 sigR,
         bytes32 sigS,
         bytes memory name,
-        bytes memory value
+        bytes memory value,
+        uint256 revokeDeltaTime
     ) external;
 
     function enableKeyRotation(address identity, uint keyRotationTime) external;

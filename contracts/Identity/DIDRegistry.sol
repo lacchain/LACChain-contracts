@@ -12,6 +12,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
     mapping(address => address[]) public controllers;
     mapping(address => mapping(bytes32 => mapping(address => uint)))
         public delegates;
+    mapping(address => mapping(bytes32 => mapping(bytes32 => uint)))
+        public attributes;
     mapping(address => DIDConfig) private configs;
     mapping(address => uint) public changed;
     mapping(address => uint) public nonce;
@@ -227,11 +229,16 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         bytes memory value,
         uint validity
     ) internal onlyController(identity, actor) {
+        uint256 currentTime = block.timestamp;
+        attributes[identity][keccak256(name)][keccak256(value)] =
+            currentTime +
+            validity;
         emit DIDAttributeChanged(
             identity,
             name,
             value,
-            block.timestamp + validity,
+            currentTime + validity,
+            currentTime,
             changed[identity]
         );
         changed[identity] = block.number;
@@ -281,18 +288,40 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address identity,
         address actor,
         bytes memory name,
-        bytes memory value
+        bytes memory value,
+        uint256 revokeDeltaTime
     ) internal onlyController(identity, actor) {
-        emit DIDAttributeChanged(identity, name, value, 0, changed[identity]);
-        changed[identity] = block.number;
+        bytes32 attributeNameHash = keccak256(name);
+        bytes32 attributeValueHash = keccak256(value);
+        uint256 revoked;
+        if (revokeDeltaTime > 0) {
+            revoked = _validateExp(
+                revokeDeltaTime,
+                attributes[identity][attributeNameHash][attributeValueHash]
+            );
+        } else {
+            revoked = 0;
+        }
+        attributes[identity][attributeNameHash][attributeValueHash] = revoked;
+        address id = identity;
+        emit DIDAttributeChanged(
+            id,
+            name,
+            value,
+            revoked,
+            block.timestamp,
+            changed[id]
+        );
+        changed[id] = block.number;
     }
 
     function revokeAttribute(
         address identity,
         bytes memory name,
-        bytes memory value
+        bytes memory value,
+        uint256 revokeDeltaTime
     ) external override {
-        revokeAttribute(identity, _msgSender(), name, value);
+        revokeAttribute(identity, _msgSender(), name, value, revokeDeltaTime);
     }
 
     function revokeAttributeSigned(
@@ -301,7 +330,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         bytes32 sigR,
         bytes32 sigS,
         bytes memory name,
-        bytes memory value
+        bytes memory value,
+        uint256 revokeDeltaTime
     ) external override {
         bytes32 hash = keccak256(
             abi.encodePacked(
@@ -312,14 +342,16 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
                 identity,
                 "revokeAttribute",
                 name,
-                value
+                value,
+                revokeDeltaTime
             )
         );
         revokeAttribute(
             identity,
             checkSignature(identity, sigV, sigR, sigS, hash),
             name,
-            value
+            value,
+            revokeDeltaTime
         );
     }
 
@@ -420,7 +452,7 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         if (revokeDeltaTime == 0) {
             expirationTime = currentTime;
         } else {
-            _validateExp(
+            expirationTime = _validateExp(
                 revokeDeltaTime,
                 delegates[identity][delegateTypeHash][delegate]
             );
