@@ -2,11 +2,11 @@
 pragma solidity 0.8.18;
 
 import "../Common/BaseRelayRecipient.sol";
-import "./IPKD.sol";
+import "./IRootOfTrust.sol";
 
 import "../utils/Ownable.sol";
 
-contract PKD is Ownable, IPKD {
+contract RootOfTrust is Ownable, IRootOfTrust {
     constructor(
         address trustedForwarderAddress,
         uint8 rootDepth,
@@ -172,8 +172,9 @@ contract PKD is Ownable, IPKD {
         string memory txt
     ) private pure returns (address addr) {
         bytes32 h = keccak256(abi.encode((txt)));
-        assembly {
-            addr := mload(add(h, 32))
-        }
+        // assembly {
+        //     addr := mload(add(h, 32))
+        // } // @todo failing
+        addr = address(0);
     }
 }

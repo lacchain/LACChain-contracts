@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.18;
 
-interface IPKD {
+interface IRootOfTrust {
     event DepthChange(address indexed tl, uint8 depth, uint256 prevBlock);
     event TlConfigChange(
         address indexed tl,
