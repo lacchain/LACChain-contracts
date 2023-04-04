@@ -46,6 +46,28 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
         _revoke(_msgSender(), digest);
     }
 
+    function onHoldChange(
+        bytes32 digest,
+        address identity,
+        bool onHoldStatus
+    ) external {
+        _validateController(_msgSender(), identity);
+        _onHoldChange(_msgSender(), digest, onHoldStatus);
+    }
+
+    function _onHoldChange(
+        address by,
+        bytes32 digest,
+        bool onHoldStatus
+    ) private {
+        uint256 currentTime = block.timestamp;
+        Detail storage detail = registers[digest][by];
+        require(detail.exp > currentTime || detail.exp == 0, "ER");
+        require(detail.onHold != onHoldStatus, "IOHCS");
+        detail.onHold = onHoldStatus;
+        emit NewOnHoldChange(digest, by, onHoldStatus, currentTime);
+    }
+
     function _revoke(address by, bytes32 digest) private {
         uint256 exp = block.timestamp;
         Detail storage detail = registers[digest][by];
@@ -57,10 +79,11 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
     function getDetails(
         address issuer,
         bytes32 digest
-    ) external view returns (uint256 iat, uint256 exp) {
+    ) external view returns (uint256 iat, uint256 exp, bool onHold) {
         Detail memory detail = registers[digest][issuer];
         iat = detail.iat;
         exp = detail.exp;
+        onHold = detail.onHold;
     }
 
     function isValidCredential(
@@ -69,7 +92,7 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
     ) external view returns (bool value) {
         Detail memory detail = registers[digest][issuer];
         uint256 exp = detail.exp;
-        value = !(exp < block.timestamp && exp > 0);
+        value = !((exp < block.timestamp && exp > 0) || detail.onHold);
     }
 
     function issueByDelegate(
@@ -116,6 +139,32 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
     ) external {
         _validateDelegateWithCustomType(delegateType, identity);
         _revoke(identity, digest);
+    }
+
+    function onHoldByDelegate(
+        address identity,
+        bytes32 digest,
+        bool onHoldStatus
+    ) external {
+        // resolve didRegistry to call
+        address registryAddress = getDidRegistry(identity);
+        _validateDelegate(
+            registryAddress,
+            identity,
+            defaultDelegateType,
+            _msgSender()
+        );
+        _onHoldChange(identity, digest, onHoldStatus);
+    }
+
+    function onHoldByDelegateWithCustomType(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        bool onHoldStatus
+    ) external {
+        _validateDelegateWithCustomType(delegateType, identity);
+        _onHoldChange(identity, digest, onHoldStatus);
     }
 
     function _validateDelegate(

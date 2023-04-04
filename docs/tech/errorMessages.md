@@ -10,3 +10,4 @@
 - ID -> Invalid Delegate
 - IC -> Invalid Controller
 - SCF -> Static Call Failed
+- IOHCS -> Invalid OnHold Change Status

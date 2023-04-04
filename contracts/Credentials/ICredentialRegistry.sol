@@ -16,6 +16,7 @@ interface ICredentialRegistry {
     struct Detail {
         uint256 iat;
         uint256 exp;
+        bool onHold;
     }
 
     /**
@@ -25,29 +26,52 @@ interface ICredentialRegistry {
 
     function revoke(bytes32 digest, address identity) external;
 
+    function onHoldChange(
+        bytes32 digest,
+        address identity,
+        bool onHoldStatus
+    ) external;
+
     function getDetails(
         address issuer,
         bytes32 digest
-    ) external view returns (uint256 iat, uint256 exp);
+    ) external view returns (uint256 iat, uint256 exp, bool onHold);
 
     /**
      * Just valid relative to the information contained in the contract
      * Validates "scenario 3" which means that data will be invalid when the expiration time has been reached by
      * the current timestamp; this means that the data has just expired because of the time has passed or because
-     * the data has been revoked
+     * the data has been revoked or because the data has been put on hold.
      */
     function isValidCredential(
         address issuer,
         bytes32 digest
     ) external view returns (bool);
 
-    event NewIssuance(bytes32 indexed digest, address by, uint iat, uint exp);
+    event NewIssuance(
+        bytes32 indexed digest,
+        address indexed by,
+        uint iat,
+        uint exp
+    );
 
     /**
      * Adding iat to the log allows verfying if the credential was actually issued onchan in the past(iat>0) or 
      just revoked (iat = 0)
      */
-    event NewRevocation(bytes32 indexed digest, address by, uint iat, uint exp);
+    event NewRevocation(
+        bytes32 indexed digest,
+        address indexed by,
+        uint iat,
+        uint exp
+    );
+
+    event NewOnHoldChange(
+        bytes32 indexed digest,
+        address indexed by,
+        bool isOnHold,
+        uint256 currentTime
+    );
 
     /**
     * if status true, the added delegate type will be valid for just all delegates under "by" (which represents an identifier for the
@@ -71,6 +95,12 @@ interface ICredentialRegistry {
 
     function revokeByDelegate(address identity, bytes32 digest) external;
 
+    function onHoldByDelegate(
+        address identity,
+        bytes32 digest,
+        bool onHoldStatus
+    ) external;
+
     /**
      * @param delegateType: must coincide with some delegate that was registered under the "identity" by using the method "addDelegateType"
      * Optional way to register a data change. In this case the delegate sends the data on behalf of the main actor
@@ -86,6 +116,13 @@ interface ICredentialRegistry {
         bytes32 delegateType,
         address identity,
         bytes32 digest
+    ) external;
+
+    function onHoldByDelegateWithCustomType(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        bool onHoldStatus
     ) external;
 
     /**
