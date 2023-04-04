@@ -21,7 +21,8 @@ interface IDIDRegistry {
         bytes value,
         uint validTo,
         uint changeTime,
-        uint previousChange
+        uint previousChange,
+        bool reason
     );
 
     event DIDDelegateChanged(
@@ -30,7 +31,8 @@ interface IDIDRegistry {
         address delegate,
         uint validTo,
         uint changeTime,
-        uint previousChange
+        uint previousChange,
+        bool reason
     );
 
     function addController(address identity, address controller) external;
@@ -68,7 +70,8 @@ interface IDIDRegistry {
         address identity,
         bytes memory name,
         bytes memory value,
-        uint256 revokeDeltaTime
+        uint256 revokeDeltaTime,
+        bool compromised
     ) external;
 
     function revokeAttributeSigned(
@@ -78,7 +81,8 @@ interface IDIDRegistry {
         bytes32 sigS,
         bytes memory name,
         bytes memory value,
-        uint256 revokeDeltaTime
+        uint256 revokeDeltaTime,
+        bool compromised
     ) external;
 
     function enableKeyRotation(address identity, uint keyRotationTime) external;

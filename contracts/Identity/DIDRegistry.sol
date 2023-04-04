@@ -239,7 +239,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
             value,
             currentTime + validity,
             currentTime,
-            changed[identity]
+            changed[identity],
+            false
         );
         changed[identity] = block.number;
     }
@@ -289,7 +290,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address actor,
         bytes memory name,
         bytes memory value,
-        uint256 revokeDeltaTime
+        uint256 revokeDeltaTime,
+        bool compromised
     ) internal onlyController(identity, actor) {
         bytes32 attributeNameHash = keccak256(name);
         bytes32 attributeValueHash = keccak256(value);
@@ -310,7 +312,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
             value,
             revoked,
             block.timestamp,
-            changed[id]
+            changed[id],
+            compromised
         );
         changed[id] = block.number;
     }
@@ -319,9 +322,17 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address identity,
         bytes memory name,
         bytes memory value,
-        uint256 revokeDeltaTime
+        uint256 revokeDeltaTime,
+        bool compromised
     ) external override {
-        revokeAttribute(identity, _msgSender(), name, value, revokeDeltaTime);
+        revokeAttribute(
+            identity,
+            _msgSender(),
+            name,
+            value,
+            revokeDeltaTime,
+            compromised
+        );
     }
 
     function revokeAttributeSigned(
@@ -331,7 +342,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         bytes32 sigS,
         bytes memory name,
         bytes memory value,
-        uint256 revokeDeltaTime
+        uint256 revokeDeltaTime,
+        bool compromised
     ) external override {
         bytes32 hash = keccak256(
             abi.encodePacked(
@@ -343,7 +355,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
                 "revokeAttribute",
                 name,
                 value,
-                revokeDeltaTime
+                revokeDeltaTime,
+                compromised
             )
         );
         revokeAttribute(
@@ -351,7 +364,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
             checkSignature(identity, sigV, sigR, sigS, hash),
             name,
             value,
-            revokeDeltaTime
+            revokeDeltaTime,
+            compromised
         );
     }
 
@@ -394,7 +408,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
             delegate,
             currentTime + validity,
             currentTime,
-            changed[identity]
+            changed[identity],
+            false
         );
         changed[identity] = block.number;
     }
@@ -444,7 +459,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address actor,
         bytes32 delegateType,
         address delegate,
-        uint256 revokeDeltaTime
+        uint256 revokeDeltaTime,
+        bool compromised
     ) internal onlyController(identity, actor) {
         uint256 expirationTime;
         bytes32 delegateTypeHash = keccak256(abi.encode(delegateType));
@@ -465,7 +481,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
             delegate,
             expirationTime,
             currentTime,
-            changed[id]
+            changed[id],
+            compromised
         );
         changed[id] = block.number;
     }
@@ -474,14 +491,16 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address identity,
         bytes32 delegateType,
         address delegate,
-        uint256 revokeDeltaTime
+        uint256 revokeDeltaTime,
+        bool compromised
     ) public {
         revokeDelegate(
             identity,
             msg.sender,
             delegateType,
             delegate,
-            revokeDeltaTime
+            revokeDeltaTime,
+            compromised
         );
     }
 
@@ -492,7 +511,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         bytes32 sigS,
         bytes32 delegateType,
         address delegate,
-        uint256 revokeDeltaTime
+        uint256 revokeDeltaTime,
+        bool compromised
     ) public {
         bytes32 hash = keccak256(
             abi.encodePacked(
@@ -504,7 +524,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
                 "revokeDelegate",
                 delegateType,
                 delegate,
-                revokeDeltaTime
+                revokeDeltaTime,
+                compromised
             )
         );
         revokeDelegate(
@@ -512,7 +533,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
             checkSignature(identity, sigV, sigR, sigS, hash),
             delegateType,
             delegate,
-            revokeDeltaTime
+            revokeDeltaTime,
+            compromised
         );
     }
 
