@@ -352,14 +352,16 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address delegate,
         uint validity
     ) internal onlyController(identity, actor) {
+        uint256 currentTime = block.timestamp;
         delegates[identity][keccak256(abi.encode(delegateType))][delegate] =
-            block.timestamp +
+            currentTime +
             validity;
         emit DIDDelegateChanged(
             identity,
             delegateType,
             delegate,
-            block.timestamp + validity,
+            currentTime + validity,
+            currentTime,
             changed[identity]
         );
         changed[identity] = block.number;
@@ -409,27 +411,46 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address identity,
         address actor,
         bytes32 delegateType,
-        address delegate
+        address delegate,
+        uint256 revokeDeltaTime
     ) internal onlyController(identity, actor) {
-        delegates[identity][keccak256(abi.encode(delegateType))][
-            delegate
-        ] = block.timestamp;
+        uint256 expirationTime;
+        bytes32 delegateTypeHash = keccak256(abi.encode(delegateType));
+        uint256 currentTime = block.timestamp;
+        if (revokeDeltaTime == 0) {
+            expirationTime = currentTime;
+        } else {
+            _validateExp(
+                revokeDeltaTime,
+                delegates[identity][delegateTypeHash][delegate]
+            );
+        }
+        address id = identity;
+        delegates[id][delegateTypeHash][delegate] = expirationTime;
         emit DIDDelegateChanged(
-            identity,
+            id,
             delegateType,
             delegate,
-            block.timestamp,
-            changed[identity]
+            expirationTime,
+            currentTime,
+            changed[id]
         );
-        changed[identity] = block.number;
+        changed[id] = block.number;
     }
 
     function revokeDelegate(
         address identity,
         bytes32 delegateType,
-        address delegate
+        address delegate,
+        uint256 revokeDeltaTime
     ) public {
-        revokeDelegate(identity, msg.sender, delegateType, delegate);
+        revokeDelegate(
+            identity,
+            msg.sender,
+            delegateType,
+            delegate,
+            revokeDeltaTime
+        );
     }
 
     function revokeDelegateSigned(
@@ -438,7 +459,8 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         bytes32 sigR,
         bytes32 sigS,
         bytes32 delegateType,
-        address delegate
+        address delegate,
+        uint256 revokeDeltaTime
     ) public {
         bytes32 hash = keccak256(
             abi.encodePacked(
@@ -449,14 +471,25 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
                 identity,
                 "revokeDelegate",
                 delegateType,
-                delegate
+                delegate,
+                revokeDeltaTime
             )
         );
         revokeDelegate(
             identity,
             checkSignature(identity, sigV, sigR, sigS, hash),
             delegateType,
-            delegate
+            delegate,
+            revokeDeltaTime
         );
+    }
+
+    function _validateExp(
+        uint256 revokeDeltaTime,
+        uint256 initialTime
+    ) private view returns (uint256 t) {
+        uint256 currentTime = block.timestamp;
+        require(currentTime - revokeDeltaTime >= initialTime, "IP");
+        t = currentTime - revokeDeltaTime;
     }
 }

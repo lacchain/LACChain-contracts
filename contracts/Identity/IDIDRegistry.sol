@@ -28,6 +28,7 @@ interface IDIDRegistry {
         bytes32 delegateType,
         address delegate,
         uint validTo,
+        uint changeTime,
         uint previousChange
     );
 
