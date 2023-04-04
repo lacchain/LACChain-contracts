@@ -41,14 +41,15 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
         emit NewIssuance(digest, by, iat, exp);
     }
 
-    function revoke(bytes32 digest, uint256 exp, address identity) external {
+    function revoke(bytes32 digest, address identity) external {
         _validateController(_msgSender(), identity);
-        _revoke(_msgSender(), digest, exp);
+        _revoke(_msgSender(), digest);
     }
 
-    function _revoke(address by, bytes32 digest, uint256 exp) private {
+    function _revoke(address by, bytes32 digest) private {
+        uint256 exp = block.timestamp;
         Detail storage detail = registers[digest][by];
-        require(detail.exp < block.timestamp && detail.exp != 0, "ER");
+        require(detail.exp > exp || detail.exp == 0, "ER");
         detail.exp = exp;
         emit NewRevocation(digest, by, detail.iat, exp);
     }
@@ -97,11 +98,7 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
         _issue(identity, digest, exp);
     }
 
-    function _revokeByDelegate(
-        address identity,
-        bytes32 digest,
-        uint256 exp
-    ) external {
+    function revokeByDelegate(address identity, bytes32 digest) external {
         address registryAddress = getDidRegistry(identity);
         _validateDelegate(
             registryAddress,
@@ -109,17 +106,16 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
             defaultDelegateType,
             _msgSender()
         );
-        _revoke(identity, digest, exp);
+        _revoke(identity, digest);
     }
 
-    function _revokeByDelegateWithCustomType(
+    function revokeByDelegateWithCustomType(
         bytes32 delegateType,
         address identity,
-        bytes32 digest,
-        uint256 exp
+        bytes32 digest
     ) external {
         _validateDelegateWithCustomType(delegateType, identity);
-        _revoke(identity, digest, exp);
+        _revoke(identity, digest);
     }
 
     function _validateDelegate(

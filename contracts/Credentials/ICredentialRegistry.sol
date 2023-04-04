@@ -23,7 +23,7 @@ interface ICredentialRegistry {
      */
     function issue(bytes32 digest, uint256 exp, address identity) external;
 
-    function revoke(bytes32 digest, uint256 exp, address identity) external;
+    function revoke(bytes32 digest, address identity) external;
 
     function getDetails(
         address issuer,
@@ -69,11 +69,7 @@ interface ICredentialRegistry {
         uint256 exp
     ) external;
 
-    function _revokeByDelegate(
-        address identity,
-        bytes32 digest,
-        uint256 exp
-    ) external;
+    function revokeByDelegate(address identity, bytes32 digest) external;
 
     /**
      * @param delegateType: must coincide with some delegate that was registered under the "identity" by using the method "addDelegateType"
@@ -86,11 +82,10 @@ interface ICredentialRegistry {
         uint256 exp
     ) external;
 
-    function _revokeByDelegateWithCustomType(
+    function revokeByDelegateWithCustomType(
         bytes32 delegateType,
         address identity,
-        bytes32 digest,
-        uint256 exp
+        bytes32 digest
     ) external;
 
     /**
