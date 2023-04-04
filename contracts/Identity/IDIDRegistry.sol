@@ -85,6 +85,48 @@ interface IDIDRegistry {
         bool compromised
     ) external;
 
+    function validDelegate(
+        address identity,
+        bytes32 delegateType,
+        address delegate
+    ) external view returns (bool);
+
+    function addDelegate(
+        address identity,
+        bytes32 delegateType,
+        address delegate,
+        uint validity
+    ) external;
+
+    function addDelegateSigned(
+        address identity,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS,
+        bytes32 delegateType,
+        address delegate,
+        uint validity
+    ) external;
+
+    function revokeDelegate(
+        address identity,
+        bytes32 delegateType,
+        address delegate,
+        uint256 revokeDeltaTime,
+        bool compromised
+    ) external;
+
+    function revokeDelegateSigned(
+        address identity,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS,
+        bytes32 delegateType,
+        address delegate,
+        uint256 revokeDeltaTime,
+        bool compromised
+    ) external;
+
     function enableKeyRotation(address identity, uint keyRotationTime) external;
 
     function disableKeyRotation(address identity) external;
