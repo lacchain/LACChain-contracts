@@ -208,7 +208,6 @@ contract CredentialRegistry is ICredentialRegistry, BaseRelayRecipient {
         address by,
         bool status
     ) private {
-        address by = _msgSender();
         require(didDelegateTypes[_msgSender()][delegateType] != status, "DAA");
         didDelegateTypes[_msgSender()][delegateType] = status;
         emit NewDelegateTypeChange(delegateType, by, status);
