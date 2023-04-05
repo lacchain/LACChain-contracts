@@ -8,8 +8,9 @@ async function main() {
   const instance = await lacchain.deployContract(
     Artifact,
     lacchain.baseRelayAddress,
-    "3",
-    "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C"
+    "3", // depth
+    "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C", // root did
+    "0xFFFCe4Cc7033746106986Aca1B8B8572B2f58B08" // root account manager
   );
   console.log(
     `${artifactName} instance successfully deployed at address: ` +

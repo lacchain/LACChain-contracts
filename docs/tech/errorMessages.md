@@ -14,7 +14,10 @@
 
 ## PKD
 
-- TLNO -> Trusted List Not Onboarded
+- DOOT -> Depth out of trust
+- MAA -> Member Already Added
+- NA -> Not Authorized
+
 - TLAO -> Trusted List Already Onboarded
 - TLAA -> Trusted List Already Added
 - IET -> Invalid Expiration Time
