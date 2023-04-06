@@ -7,18 +7,18 @@ import "./IRootOfTrust.sol";
 import "../utils/Ownable.sol";
 
 contract RootOfTrust is Ownable, IRootOfTrust {
-    uint256 tlCounter;
-    // entityManager => gId
-    mapping(address => groupDetail) group;
+    uint256 public tlCounter;
+    // entityManager => (gId, didAddress)
+    mapping(address => groupDetail) public group;
     // gId => entityManager
     mapping(uint256 => address) manager;
 
     // gIdParent => gIdMember  => groupMemberDetail
-    mapping(uint256 => mapping(uint256 => TlDetail)) trustedList;
+    mapping(uint256 => mapping(uint256 => TlDetail)) public trustedList;
 
     mapping(uint256 => uint256) trustedBy;
 
-    uint8 depth;
+    uint8 public depth;
 
     constructor(
         address trustedForwarderAddress,
@@ -27,7 +27,8 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         address rootEntityManager
     ) BaseRelayRecipient(trustedForwarderAddress) {
         depth = rootDepth;
-        _configTl(tlCounter++, did, rootEntityManager);
+        tlCounter++;
+        _configTl(tlCounter, did, rootEntityManager);
     }
 
     uint256 prevBlock;
@@ -80,7 +81,8 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         uint256 exp
     ) private {
         require(group[memberEntity].gId == 0, "MAA");
-        uint256 memberGId = tlCounter++;
+        tlCounter++;
+        uint256 memberGId = tlCounter;
 
         uint256 parentGId = group[parentEntity].gId;
         require(parentGId > 0, "NA");
@@ -110,7 +112,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
     ) private pure returns (address addr) {
         bytes32 h = keccak256(abi.encode((txt)));
         assembly {
-            addr := mload(0) // @todo
+            addr := h
         }
     }
 
