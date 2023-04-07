@@ -88,7 +88,7 @@ describe("RootOfTrust", function () {
       expect(trusted.exp).to.be.greaterThanOrEqual(trusted.iat);
     });
 
-    it("Should add a member at a level higher than one when depth > 1", async () => {
+    it("Should add a member at a level higher than one when depth > 0", async () => {
       const memberDid =
         "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
       const rootManagerAddress = rootManager.address;
@@ -172,6 +172,31 @@ describe("RootOfTrust", function () {
       await sleep(2);
       const trusted = await contract.trustedList(2, 3);
       expect(trusted.exp).to.be.eq(0);
+    });
+
+    it("Should fail on adding a member if that member is already added and is still a valid member", async () => {
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+      const rootManagerAddress = rootManager.address;
+      const depth = 1; // max depth
+      const contractAddress = await deployRootOfTrust(
+        // on deployment, root manager is automatically assigned as depth 0 (level 0)
+        depth,
+        did,
+        rootManagerAddress
+      );
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
+      const contract = Artifact.attach(contractAddress);
+      const memberAddress = member1.address;
+      await contract.addMemberTl(memberAddress, memberDid, 86400 * 365);
+      await sleep(2);
+      await expect(
+        contract.callStatic.addMemberTl(memberAddress, memberDid, 86400 * 365)
+      ).to.be.revertedWith("MAA");
     });
   });
 
