@@ -16,7 +16,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
     // gIdParent => gIdMember  => groupMemberDetail
     mapping(uint256 => mapping(uint256 => TlDetail)) public trustedList;
 
-    mapping(uint256 => uint256) trustedBy;
+    mapping(uint256 => uint256) public trustedBy;
 
     uint8 public depth;
 
@@ -86,7 +86,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
 
         uint256 parentGId = group[parentEntity].gId;
         require(parentGId > 0, "NA");
-        _verifyDepth(parentGId, 0, depth);
+        _verifyIfChildCanBeAdded(parentGId, depth);
 
         _configTl(memberGId, memberDid, memberEntity);
 
@@ -94,6 +94,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
 
         TlDetail storage t = trustedList[parentGId][memberGId];
         require(t.iat == uint256(0), "TLAA");
+        trustedBy[memberGId] = parentGId;
         t.iat = iat;
         t.exp = exp;
         emit PkAdded(
@@ -116,12 +117,12 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         }
     }
 
-    function _verifyDepth(uint256 gId, uint8 d, uint8 maxDepth) private view {
-        require(d <= maxDepth, "DOOT");
-        if (gId == 1) {
+    function _verifyIfChildCanBeAdded(uint256 parentGId, uint8 d) public view {
+        require(d > 0, "DOOT");
+        if (parentGId == 1) {
             return;
         }
-        gId = trustedBy[gId];
-        return _verifyDepth(gId, d++, maxDepth);
+        parentGId = trustedBy[parentGId];
+        return _verifyIfChildCanBeAdded(parentGId, d - 1);
     }
 }
