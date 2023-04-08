@@ -221,6 +221,41 @@ describe("RootOfTrust", function () {
           anyValue
         );
     });
+    it("Should throw if a member no longer trusted tries to add a member", async () => {
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+      const rootManagerAddress = rootManager.address;
+      const depth = 2; // max depth
+      const contractAddress = await deployRootOfTrust(
+        // on deployment, root manager is automatically assigned as depth 0 (level 0)
+        depth,
+        did,
+        rootManagerAddress
+      );
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      const contract = Artifact.attach(contractAddress);
+      const memberAddress = member1.address;
+      await contract.addMemberTl(memberAddress, memberDid, 2); // validity for just 2 seconds
+
+      await sleep(3);
+
+      // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
+      const Artifact1 = await ethers.getContractFactory(artifactName, member1);
+      const contract1 = Artifact1.attach(contractAddress);
+      const member2Address = member2.address;
+      const member2Did =
+        "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
+      const result = await contract1.addMemberTl(
+        member2Address,
+        member2Did,
+        86400 * 365
+      );
+
+      await expect(result).not.to.emit(contract, "PkChanged");
+    });
   });
 
   const sleep = (seconds: number) =>
