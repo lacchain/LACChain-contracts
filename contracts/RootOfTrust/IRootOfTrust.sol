@@ -15,18 +15,9 @@ interface IRootOfTrust {
     event DepthChange(uint8 depth, uint256 prevBlock);
     event TlConfigChange(address indexed tl, string did, uint256 prevBlock);
     event MemberOnboarded(address indexed tl, uint256 prevBlock);
-    event PkAdded(
+    event PkChanged(
         address indexed parentEntity,
         address indexed memberEntity,
-        string did,
-        uint256 iat,
-        uint256 exp,
-        uint256 prevBlock
-    );
-
-    event PkUpdated(
-        address indexed parentTl,
-        address indexed tl,
         string did,
         uint256 iat,
         uint256 exp,
@@ -40,4 +31,16 @@ interface IRootOfTrust {
         uint256 exp,
         uint256 prevBlock
     );
+
+    function addMemberTl(
+        address memberEntity,
+        string memory did,
+        uint256 period
+    ) external;
+
+    function updateMemberTl(
+        address memberEntity,
+        string memory did,
+        uint256 period
+    ) external;
 }

@@ -12,11 +12,14 @@
 - SCF -> Static Call Failed
 - IOHCS -> Invalid OnHold Change Status
 
-## PKD
+## Root Of Trust
 
 - DOOT -> Depth out of trust
 - MAA -> Member Already Added
 - NA -> Not Authorized
+- MDEIYR -> Member does not exist in your registry
+- MATAL -> Member added to another group
+- DDM -> Did does not match
 
 - TLAO -> Trusted List Already Onboarded
 - TLAA -> Trusted List Already Added
