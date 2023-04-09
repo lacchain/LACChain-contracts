@@ -32,13 +32,7 @@ interface IRootOfTrust {
         uint256 prevBlock
     );
 
-    function addMemberTl(
-        address memberEntity,
-        string memory did,
-        uint256 period
-    ) external;
-
-    function updateMemberTl(
+    function addOrUpdateMemberTl(
         address memberEntity,
         string memory did,
         uint256 period

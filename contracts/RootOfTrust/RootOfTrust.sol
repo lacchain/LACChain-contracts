@@ -54,14 +54,14 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         prevBlock = block.number;
     }
 
-    function addMemberTl(
+    function addOrUpdateMemberTl(
         address memberEntity,
         string memory did,
         uint256 period
     ) external {
         address parentEntity = _msgSender();
         uint256 exp = _getExp(period);
-        _addMemberTl(parentEntity, memberEntity, did, exp);
+        _addOrUpdateMemberTl(parentEntity, memberEntity, did, exp);
     }
 
     function _getTimestamp() private view returns (uint256 timestamp) {
@@ -74,26 +74,35 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         exp = currentTime + period;
     }
 
-    function _addMemberTl(
+    function _addOrUpdateMemberTl(
         address parentEntity,
-        address memberEntity, //tl
+        address memberEntity,
         string memory memberDid,
         uint256 exp
     ) private {
-        require(group[memberEntity].gId == 0, "MAA");
-        tlCounter++;
-        uint256 memberGId = tlCounter;
-
+        groupDetail memory g = group[memberEntity];
+        // require(g.gId == 0, "MAA"); // todo
+        uint256 memberGId;
         uint256 parentGId = group[parentEntity].gId;
+        if (g.gId > 0) {
+            _checkParentOrThrow(g.gId, parentGId);
+            memberGId = g.gId;
+            require(
+                _computeAddress(memberDid) == group[memberEntity].didAddress,
+                "DDM"
+            );
+        } else {
+            tlCounter++;
+            memberGId = tlCounter;
+            _configTl(memberGId, memberDid, memberEntity);
+        }
         require(parentGId > 0, "NA");
-        _verifyWhetherChildCanBeAdded(parentGId, depth);
-
-        _configTl(memberGId, memberDid, memberEntity);
+        _verifyWhetherAChildCanBeAdded(parentGId, depth);
 
         uint256 iat = _getTimestamp();
 
         TlDetail storage t = trustedList[parentGId][memberGId];
-        require(t.iat == uint256(0), "TLAA");
+        // require(t.iat == uint256(0), "TLAA"); // todo: check
         trustedBy[memberGId] = parentGId;
         t.iat = iat;
         t.exp = exp;
@@ -108,50 +117,14 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         prevBlock = block.number;
     }
 
-    function updateMemberTl(
-        address memberEntity,
-        string memory did,
-        uint256 period
-    ) external {
-        // validate member is already added
-        address parentEntity = _msgSender();
-
-        // validate whether sender is able to modify by checking whether he is trusted by someone upwards in the chain of trust
-        uint256 parentGId = group[parentEntity].gId;
-        _verifyWhetherChildCanBeAdded(parentGId, depth);
-
-        // validate whether member can be updated in the parent group
-        uint256 memberGId = group[memberEntity].gId;
-        TlDetail storage tlDetail = trustedList[parentGId][memberGId];
-        require(tlDetail.iat > 0, "MDEIYR");
-        // expired case
-        if (tlDetail.exp < block.timestamp)
-            _validateMemberIsInNotInAnotherList(memberGId, parentGId);
-        //update member tl
-        require(_computeAddress(did) == group[memberEntity].didAddress, "DDM");
-
-        uint256 iat = _getTimestamp();
-
-        uint256 exp = _getExp(period);
-        TlDetail storage t = tlDetail;
-
-        trustedBy[memberGId] = parentGId;
-        t.iat = iat;
-        t.exp = exp;
-        emit PkChanged(parentEntity, memberEntity, did, iat, exp, prevBlock);
-        prevBlock = block.number;
-    }
-
-    function _validateMemberIsInNotInAnotherList(
+    function _checkParentOrThrow(
         uint256 memberGId,
-        uint256 parentGId
+        uint256 parentCandidate
     ) private view {
-        uint256 anotherParentGId = trustedBy[memberGId];
-        if (anotherParentGId == 0 || anotherParentGId == parentGId) return;
-        require(
-            trustedList[anotherParentGId][memberGId].exp < block.timestamp,
-            "MATAL"
-        );
+        uint256 parentGId = trustedBy[memberGId];
+        uint256 exp = trustedList[parentGId][memberGId].exp;
+        if (parentGId == parentCandidate) return;
+        require(exp < block.timestamp, "MAA");
     }
 
     function _computeAddress(
@@ -163,10 +136,10 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         }
     }
 
-    function _verifyWhetherChildCanBeAdded(
+    function _verifyWhetherAChildCanBeAdded(
         uint256 parentGId,
         uint8 d
-    ) public view {
+    ) private view {
         require(d > 0, "DOOT");
         if (parentGId == 1) {
             return;
@@ -176,6 +149,6 @@ contract RootOfTrust is Ownable, IRootOfTrust {
             trustedList[grandParentGId][parentGId].exp > block.timestamp,
             "NA"
         );
-        return _verifyWhetherChildCanBeAdded(grandParentGId, d - 1);
+        return _verifyWhetherAChildCanBeAdded(grandParentGId, d - 1);
     }
 }

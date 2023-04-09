@@ -18,7 +18,6 @@
 - MAA -> Member Already Added
 - NA -> Not Authorized
 - MDEIYR -> Member does not exist in your registry
-- MATAL -> Member added to another group
 - DDM -> Did does not match
 
 - TLAO -> Trusted List Already Onboarded

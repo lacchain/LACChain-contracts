@@ -5,7 +5,7 @@ import { keccak256 } from "ethers/lib/utils";
 
 describe("RootOfTrust", function () {
   const artifactName = "RootOfTrust";
-  const [owner, rootManager, member1, member2] = lacchain.getSigners();
+  const [owner, rootManager, member1, member2, member3] = lacchain.getSigners();
   const depth = 3;
   const did =
     "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C";
@@ -56,7 +56,7 @@ describe("RootOfTrust", function () {
       );
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      const result = await contract.addMemberTl(
+      const result = await contract.addOrUpdateMemberTl(
         memberAddress,
         memberDid,
         86400 * 365
@@ -98,7 +98,7 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
       await sleep(2);
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
@@ -106,7 +106,7 @@ describe("RootOfTrust", function () {
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      const result = await contract1.addMemberTl(
+      const result = await contract1.addOrUpdateMemberTl(
         member2Address,
         member2Did,
         86400 * 365
@@ -144,7 +144,7 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
       await sleep(2);
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3) --> must fails since depth is 1
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
@@ -152,7 +152,7 @@ describe("RootOfTrust", function () {
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      const result = await contract1.addMemberTl(
+      const result = await contract1.addOrUpdateMemberTl(
         member2Address,
         member2Did,
         86400 * 365
@@ -161,7 +161,7 @@ describe("RootOfTrust", function () {
       const trusted = await contract.trustedList(2, 3);
       expect(trusted.exp).to.be.eq(0);
     });
-    it("Should fail on adding a member if that member is already added and is still a valid member", async () => {
+    it("Should allow updating a member if that member is already added by me", async () => {
       const memberDid =
         "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
       const rootManagerAddress = rootManager.address;
@@ -179,37 +179,29 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addMemberTl(memberAddress, memberDid, 86400 * 365);
-      await sleep(2);
-      await expect(
-        contract.callStatic.addMemberTl(memberAddress, memberDid, 86400 * 365)
-      ).to.be.revertedWith("MAA");
-    });
-    it("Should update a member in my Group (TL)", async () => {
-      const memberDid =
-        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
-      const rootManagerAddress = rootManager.address;
-      const depth = 1; // max depth
-      const contractAddress = await deployRootOfTrust(
-        // on deployment, root manager is automatically assigned as depth 0 (level 0)
-        depth,
-        did,
-        rootManagerAddress
-      );
-      const Artifact = await ethers.getContractFactory(
-        artifactName,
-        rootManager
-      );
-      const contract = Artifact.attach(contractAddress);
-      const memberAddress = member1.address;
-      await contract.addMemberTl(memberAddress, memberDid, 86400 * 365);
-
-      await sleep(2);
-      const result = await contract.updateMemberTl(
+      let result = await contract.addOrUpdateMemberTl(
         memberAddress,
         memberDid,
         86400 * 365
       );
+      await sleep(2);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          rootManagerAddress,
+          memberAddress,
+          memberDid,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+      // Updating ...
+      result = await contract.addOrUpdateMemberTl(
+        memberAddress,
+        memberDid,
+        86400 * 20
+      );
+      await sleep(2);
       await expect(result)
         .to.emit(contract, "PkChanged")
         .withArgs(
@@ -221,7 +213,7 @@ describe("RootOfTrust", function () {
           anyValue
         );
     });
-    it("Should throw if a member no longer trusted tries to add a member", async () => {
+    it("Should throw if a no longer trusted member tries to add a member", async () => {
       const memberDid =
         "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
       const rootManagerAddress = rootManager.address;
@@ -238,23 +230,94 @@ describe("RootOfTrust", function () {
       );
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addMemberTl(memberAddress, memberDid, 2); // validity for just 2 seconds
-
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 2); // validity for just 2 seconds
       await sleep(3);
-
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
       const contract1 = Artifact1.attach(contractAddress);
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      const result = await contract1.addMemberTl(
+      const result = await contract1.addOrUpdateMemberTl(
         member2Address,
         member2Did,
         86400 * 365
       );
-
       await expect(result).not.to.emit(contract, "PkChanged");
+    });
+    it("Should add a member in my Group (TL) if it already exists (doesn't matter who added it) but is no longer valid (expired)", async () => {
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+      const rootManagerAddress = rootManager.address;
+      const depth = 2; // max depth
+      const contractAddress = await deployRootOfTrust(
+        depth,
+        did,
+        rootManagerAddress
+      );
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
+      const contract = Artifact.attach(contractAddress);
+      const memberAddress = member1.address;
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      // at level 1, rootManager (gId = 1) adds member 2 (gId = 3)
+      const member2Address = member2.address;
+      const member2Did =
+        "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
+      await contract.addOrUpdateMemberTl(
+        member2Address,
+        member2Did,
+        86400 * 365
+      );
+      await sleep(2);
+      // at level 2, member1 (gId = 2) adds member 3 (gId = 4) .. added for just 2 seconds
+      const Artifact1 = await ethers.getContractFactory(artifactName, member1);
+      const contract1 = Artifact1.attach(contractAddress);
+      const member3Address = member3.address;
+      const member3Did =
+        "did:web:lacchain.id:0vBrrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb4C";
+      let result = await contract1.addOrUpdateMemberTl(
+        member3Address,
+        member3Did,
+        1 // for just 1 second
+      );
+      await sleep(4);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          memberAddress,
+          member3Address,
+          member3Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+      // at level 2, member2 (gId = 3) adds member 3 (gId = 4)
+      const Artifact2 = await ethers.getContractFactory(artifactName, member2);
+      const contract2 = Artifact2.attach(contractAddress);
+      result = await contract2.addOrUpdateMemberTl(
+        member3Address,
+        member3Did,
+        84600 * 365
+      );
+      await sleep(2);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          member2Address,
+          member3Address,
+          member3Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+      const member3Group = await contract2.group(member3Address);
+      const t1 = await contract2.trustedBy(member3Group.gId);
+      const member2Group = await contract2.group(member2Address);
+      expect(t1).to.equal(member2Group.gId);
     });
   });
 
