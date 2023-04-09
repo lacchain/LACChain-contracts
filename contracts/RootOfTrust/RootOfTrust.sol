@@ -122,6 +122,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         uint256 parentCandidate
     ) private view {
         uint256 parentGId = trustedBy[memberGId];
+        if(!_checkChainOfTrustByExpiration(parentGId)) return; // if chain is broken by expiration then allow adding some child of that chain
         uint256 exp = trustedList[parentGId][memberGId].exp;
         if (parentGId == parentCandidate) return;
         require(exp < block.timestamp, "MAA");
@@ -150,5 +151,19 @@ contract RootOfTrust is Ownable, IRootOfTrust {
             "NA"
         );
         return _verifyWhetherAChildCanBeAdded(grandParentGId, d - 1);
+    }
+
+    function _checkChainOfTrustByExpiration(
+        uint256 memberGId
+    ) private view returns (bool isValid) {
+        if (memberGId == 1) { // because of the hierarchy of chain of trust, code will eventually reach here
+            return true;
+        }
+        uint256 parentGId = trustedBy[memberGId];
+        if(
+            trustedList[parentGId][memberGId].exp < block.timestamp,
+          
+        ) return false;
+        return _checkChainOfTrustByExpiration(parentGId); // (grandParentGId, d - 1);
     }
 }
