@@ -25,8 +25,8 @@ interface IRootOfTrust {
     );
 
     event PkRevoked(
-        address indexed parentTl,
-        address indexed tl,
+        address indexed parentEntity,
+        address indexed memberEntity,
         string did,
         uint256 exp,
         uint256 prevBlock

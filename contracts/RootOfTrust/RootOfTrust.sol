@@ -64,6 +64,27 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         _addOrUpdateMemberTl(parentEntity, memberEntity, did, exp);
     }
 
+    function revokeMember(address memberEntity, string memory did) external {
+        address parentEntity = _msgSender();
+        _revokeMember(parentEntity, memberEntity, did);
+    }
+
+    function _revokeMember(
+        address parentEntity,
+        address memberEntity,
+        string memory did
+    ) private {
+        uint256 parentGId = group[parentEntity].gId;
+        uint256 memberGId = group[memberEntity].gId;
+        TlDetail storage d = trustedList[parentGId][memberGId];
+        uint256 currentTime = block.timestamp;
+        require(d.exp > currentTime, "MDEIYR");
+        _validateDidMatch(did, memberEntity);
+        d.exp = currentTime;
+        emit PkRevoked(parentEntity, memberEntity, did, currentTime, prevBlock);
+        prevBlock = block.number;
+    }
+
     function _getTimestamp() private view returns (uint256 timestamp) {
         timestamp = block.timestamp;
     }
@@ -87,10 +108,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         if (g.gId > 0) {
             _checkParentOrThrow(g.gId, parentGId);
             memberGId = g.gId;
-            require(
-                _computeAddress(memberDid) == group[memberEntity].didAddress,
-                "DDM"
-            );
+            _validateDidMatch(memberDid, memberEntity);
         } else {
             tlCounter++;
             memberGId = tlCounter;
@@ -117,15 +135,31 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         prevBlock = block.number;
     }
 
+    function _validateDidMatch(
+        string memory memberDid,
+        address memberEntity
+    ) private view {
+        require(
+            _computeAddress(memberDid) == group[memberEntity].didAddress,
+            "DDM"
+        );
+    }
+
     function _checkParentOrThrow(
         uint256 memberGId,
         uint256 parentCandidate
     ) private view {
         uint256 parentGId = trustedBy[memberGId];
-        if(!_checkChainOfTrustByExpiration(parentGId)) return; // if chain is broken by expiration then allow adding some child of that chain
-        uint256 exp = trustedList[parentGId][memberGId].exp;
+        if (!_checkChainOfTrustByExpiration(parentGId)) return; // if chain is broken by expiration then allow adding some child of that chain
         if (parentGId == parentCandidate) return;
-        require(exp < block.timestamp, "MAA");
+        _checkParentIsExpired(parentGId, memberGId);
+    }
+
+    function _checkParentIsExpired(
+        uint256 parentGId,
+        uint256 memberGId
+    ) private view {
+        require(trustedList[parentGId][memberGId].exp < block.timestamp, "MAA");
     }
 
     function _computeAddress(
@@ -156,14 +190,13 @@ contract RootOfTrust is Ownable, IRootOfTrust {
     function _checkChainOfTrustByExpiration(
         uint256 memberGId
     ) private view returns (bool isValid) {
-        if (memberGId == 1) { // because of the hierarchy of chain of trust, code will eventually reach here
+        if (memberGId == 1) {
+            // because of the hierarchy of chain of trust, code will eventually reach here
             return true;
         }
         uint256 parentGId = trustedBy[memberGId];
-        if(
-            trustedList[parentGId][memberGId].exp < block.timestamp,
-          
-        ) return false;
+        if (trustedList[parentGId][memberGId].exp < block.timestamp)
+            return false;
         return _checkChainOfTrustByExpiration(parentGId); // (grandParentGId, d - 1);
     }
 }

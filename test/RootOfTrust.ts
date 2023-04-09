@@ -319,6 +319,124 @@ describe("RootOfTrust", function () {
       const member2Group = await contract2.group(member2Address);
       expect(t1).to.equal(member2Group.gId);
     });
+    it("Should revoke a member in my Group (TL)", async () => {
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+      const rootManagerAddress = rootManager.address;
+      const depth = 1; // max depth
+      const contractAddress = await deployRootOfTrust(
+        depth,
+        did,
+        rootManagerAddress
+      );
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
+      const contract = Artifact.attach(contractAddress);
+      const memberAddress = member1.address;
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+
+      const result = await contract.revokeMember(memberAddress, memberDid);
+      await sleep(8);
+      await expect(result)
+        .to.emit(contract, "PkRevoked")
+        .withArgs(
+          rootManagerAddress,
+          memberAddress,
+          memberDid,
+          anyValue,
+          anyValue
+        );
+    });
+
+    it("Should add a member in my Group (TL) if it already exists (doesn't matter who added it) but some of its parents broke one chain of trust", async () => {
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+      const rootManagerAddress = rootManager.address;
+      const depth = 2; // max depth
+      const contractAddress = await deployRootOfTrust(
+        depth,
+        did,
+        rootManagerAddress
+      );
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
+      const contract = Artifact.attach(contractAddress);
+      const memberAddress = member1.address;
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      // at level 1, rootManager (gId = 1) adds member 2 (gId = 3)
+      const member2Address = member2.address;
+      const member2Did =
+        "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
+      await contract.addOrUpdateMemberTl(
+        member2Address,
+        member2Did,
+        86400 * 365
+      );
+      await sleep(2);
+      // at level 2, member1 (gId = 2) adds member 3 (gId = 4) .. added for just 2 seconds
+      const Artifact1 = await ethers.getContractFactory(artifactName, member1);
+      const contract1 = Artifact1.attach(contractAddress);
+      const member3Address = member3.address;
+      const member3Did =
+        "did:web:lacchain.id:0vBrrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb4C";
+      let result = await contract1.addOrUpdateMemberTl(
+        member3Address,
+        member3Did,
+        86400 * 365
+      );
+      await sleep(4);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          memberAddress,
+          member3Address,
+          member3Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+      // at level 1, rootManager (gId = 1) revokes member 1
+      result = await contract.revokeMember(memberAddress, memberDid);
+      await sleep(4);
+      await expect(result)
+        .to.emit(contract, "PkRevoked")
+        .withArgs(
+          rootManagerAddress,
+          memberAddress,
+          memberDid,
+          anyValue,
+          anyValue
+        );
+      // at level 2, member2 (gId = 3) adds member 3 (gId = 4)
+      const Artifact2 = await ethers.getContractFactory(artifactName, member2);
+      const contract2 = Artifact2.attach(contractAddress);
+      result = await contract2.addOrUpdateMemberTl(
+        member3Address,
+        member3Did,
+        84600 * 365
+      );
+      await sleep(4);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          member2Address,
+          member3Address,
+          member3Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+      const member3Group = await contract2.group(member3Address);
+      const t1 = await contract2.trustedBy(member3Group.gId);
+      const member2Group = await contract2.group(member2Address);
+      expect(t1).to.equal(member2Group.gId);
+    });
   });
 
   const sleep = (seconds: number) =>
