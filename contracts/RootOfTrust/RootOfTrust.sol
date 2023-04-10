@@ -19,15 +19,18 @@ contract RootOfTrust is Ownable, IRootOfTrust {
     mapping(uint256 => uint256) public trustedBy;
 
     uint8 public depth;
+    uint8 revokeConfigMode;
 
     constructor(
         address trustedForwarderAddress,
         uint8 rootDepth,
         string memory did,
-        address rootEntityManager
+        address rootEntityManager,
+        uint8 revokeMode
     ) BaseRelayRecipient(trustedForwarderAddress) {
         depth = rootDepth;
         tlCounter++;
+        revokeConfigMode = revokeMode;
         _configTl(tlCounter, did, rootEntityManager);
     }
 
@@ -66,10 +69,25 @@ contract RootOfTrust is Ownable, IRootOfTrust {
 
     function revokeMember(address memberEntity, string memory did) external {
         address parentEntity = _msgSender();
-        _revokeMember(parentEntity, memberEntity, did);
+        _revokeMember(parentEntity, parentEntity, memberEntity, did);
+    }
+
+    function revokeMemberByRoot(
+        address memberEntity,
+        string memory did
+    ) external {
+        require(revokeConfigMode == 1, "RBYRNE");
+        uint256 memberEntityGId = group[memberEntity].gId;
+        uint256 parentEntityGId = trustedBy[memberEntityGId];
+        require(parentEntityGId > 0, "MNA"); // means "memberEntity" was not added to any group
+        address parentEntity = manager[parentEntityGId];
+        address rootEntity = _msgSender();
+        require(group[rootEntity].gId == 1, "OR");
+        _revokeMember(rootEntity, parentEntity, memberEntity, did);
     }
 
     function _revokeMember(
+        address revokerEntity,
         address parentEntity,
         address memberEntity,
         string memory did
@@ -78,10 +96,17 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         uint256 memberGId = group[memberEntity].gId;
         TlDetail storage d = trustedList[parentGId][memberGId];
         uint256 currentTime = block.timestamp;
-        require(d.exp > currentTime, "MDEIYR");
+        require(d.exp > currentTime, "MAE");
         _validateDidMatch(did, memberEntity);
         d.exp = currentTime;
-        emit PkRevoked(parentEntity, memberEntity, did, currentTime, prevBlock);
+        emit PkRevoked(
+            revokerEntity,
+            parentEntity,
+            memberEntity,
+            did,
+            currentTime,
+            prevBlock
+        );
         prevBlock = block.number;
     }
 
