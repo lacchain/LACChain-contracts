@@ -20,6 +20,8 @@ contract RootOfTrust is Ownable, IRootOfTrust {
 
     uint8 public depth;
     uint8 revokeConfigMode;
+    uint8 public constant ROOTANDPARENT = 1;
+    uint8 public constant ALLANCESTORS = 2;
 
     constructor(
         address trustedForwarderAddress,
@@ -76,14 +78,33 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         address memberEntity,
         string memory did
     ) external {
-        require(revokeConfigMode == 1, "RBYRNE");
+        require(revokeConfigMode == ROOTANDPARENT, "RBRNE");
+        address actor = _msgSender();
+        require(group[actor].gId == 1, "OR");
+        _revokeMemberIndirectly(actor, memberEntity, did);
+    }
+
+    function revokeMemberByAnyAncestor(
+        address memberEntity,
+        string memory did
+    ) external {
+        require(revokeConfigMode == ALLANCESTORS, "RBAANE");
+        _revokeMemberIndirectly(_msgSender(), memberEntity, did);
+    }
+
+    function _revokeMemberIndirectly(
+        address actor,
+        address memberEntity,
+        string memory did
+    ) private {
         uint256 memberEntityGId = group[memberEntity].gId;
         uint256 parentEntityGId = trustedBy[memberEntityGId];
-        require(parentEntityGId > 0, "MNA"); // means "memberEntity" was not added to any group
+        require(parentEntityGId > 0, "MNA"); // means "memberEntity" was not added to any group, indirectly makes sure  memberEntityGId > 1
         address parentEntity = manager[parentEntityGId];
-        address rootEntity = _msgSender();
-        require(group[rootEntity].gId == 1, "OR");
-        _revokeMember(rootEntity, parentEntity, memberEntity, did);
+        uint256 actorGId = group[actor].gId;
+
+        require(_checkAncestor(actorGId, memberEntityGId), "NA"); // validates also the particular chain is valid (e.g. not expired)
+        _revokeMember(actor, parentEntity, memberEntity, did);
     }
 
     function _revokeMember(
@@ -172,11 +193,11 @@ contract RootOfTrust is Ownable, IRootOfTrust {
 
     function _checkParentOrThrow(
         uint256 memberGId,
-        uint256 parentCandidate
+        uint256 parentCandidateGId
     ) private view {
         uint256 parentGId = trustedBy[memberGId];
         if (!_checkChainOfTrustByExpiration(parentGId)) return; // if chain is broken by expiration then allow adding some child of that chain
-        if (parentGId == parentCandidate) return;
+        if (parentGId == parentCandidateGId) return;
         _checkParentIsExpired(parentGId, memberGId);
     }
 
@@ -223,5 +244,16 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         if (trustedList[parentGId][memberGId].exp < block.timestamp)
             return false;
         return _checkChainOfTrustByExpiration(parentGId); // (grandParentGId, d - 1);
+    }
+
+    function _checkAncestor(
+        uint256 actorGId,
+        uint256 memberGId
+    ) private view returns (bool) {
+        if (memberGId == 1) return false;
+        uint256 parentGId = trustedBy[memberGId];
+        require(trustedList[parentGId][memberGId].exp > block.timestamp, "RC");
+        if (parentGId == actorGId) return true;
+        return _checkAncestor(actorGId, parentGId);
     }
 }
