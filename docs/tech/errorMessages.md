@@ -19,11 +19,13 @@
 - NA -> Not Authorized
 - MDEIYR -> Member does not exist in your registry
 - DDM -> Did does not match
+- MAE -> Member Already Expired
+- RBYRNE -> Revocation by Root Not Enabled
+- OR -> Only Root
+- MNA -> Member Not Added
 
 - TLAO -> Trusted List Already Onboarded
 - TLAA -> Trusted List Already Added
 - IET -> Invalid Expiration Time
-- TLNA -> Trusted List Not Added
-- ETL -> Expired Trusted List
 - IP -> Invalid Period
 - DDMODE -> Did Does Not Match or Does Not Exist

@@ -13,7 +13,8 @@ describe("RootOfTrust", function () {
   async function deployRootOfTrust(
     depth: number,
     did: string,
-    rootManagerAddress: string
+    rootManagerAddress: string,
+    revokeMode = 0
   ): Promise<string> {
     const Artifact = await ethers.getContractFactory(artifactName, owner);
     const instance = await lacchain.deployContract(
@@ -21,7 +22,8 @@ describe("RootOfTrust", function () {
       lacchain.baseRelayAddress,
       depth,
       did,
-      rootManagerAddress // root account manager
+      rootManagerAddress, // root account manager
+      revokeMode
     );
     return instance.address;
   }
@@ -344,6 +346,7 @@ describe("RootOfTrust", function () {
         .to.emit(contract, "PkRevoked")
         .withArgs(
           rootManagerAddress,
+          rootManagerAddress,
           memberAddress,
           memberDid,
           anyValue,
@@ -351,7 +354,7 @@ describe("RootOfTrust", function () {
         );
     });
 
-    it("Should add a member in my Group (TL) if it already exists (doesn't matter who added it) but some of its parents broke one chain of trust", async () => {
+    it("Should add a member in my Group (TL) if it already exists (doesn't matter who added it) but some of its parents broke the required chain of trust", async () => {
       const memberDid =
         "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
       const rootManagerAddress = rootManager.address;
@@ -408,6 +411,7 @@ describe("RootOfTrust", function () {
         .to.emit(contract, "PkRevoked")
         .withArgs(
           rootManagerAddress,
+          rootManagerAddress,
           memberAddress,
           memberDid,
           anyValue,
@@ -436,6 +440,73 @@ describe("RootOfTrust", function () {
       const t1 = await contract2.trustedBy(member3Group.gId);
       const member2Group = await contract2.group(member2Address);
       expect(t1).to.equal(member2Group.gId);
+    });
+    it("Should allow a parent and the root parent to revoke an entity in a child group if configured that way", async () => {
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+      const rootManagerAddress = rootManager.address;
+      const depth = 2; // max depth
+      const revokeMode = 1; // root and parent can revoke
+      const contractAddress = await deployRootOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode
+      );
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
+      const contract = Artifact.attach(contractAddress);
+      const memberAddress = member1.address;
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await sleep(2);
+      // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
+      const Artifact1 = await ethers.getContractFactory(artifactName, member1);
+      const contract1 = Artifact1.attach(contractAddress);
+      const member2Address = member2.address;
+      const member2Did =
+        "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
+      let result = await contract1.addOrUpdateMemberTl(
+        member2Address,
+        member2Did,
+        86400 * 365
+      );
+      await sleep(2);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          memberAddress,
+          member2Address,
+          member2Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+
+      // must fail if root manager revokes a member who does not exist
+      await expect(
+        contract.callStatic.revokeMemberByRoot(member3.address, "abc")
+      ).to.be.revertedWith("MNA");
+
+      await expect(
+        contract1.callStatic.revokeMemberByRoot(member2Address, member2Did)
+      ).to.be.revertedWith("OR");
+
+      // root manager revokes member 2
+      result = await contract.revokeMemberByRoot(member2Address, member2Did);
+      await sleep(4);
+      await expect(result)
+        .to.emit(contract, "PkRevoked")
+        .withArgs(
+          rootManagerAddress,
+          memberAddress,
+          member2Address,
+          member2Did,
+          anyValue,
+          anyValue
+        );
     });
   });
 
