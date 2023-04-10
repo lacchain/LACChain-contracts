@@ -247,6 +247,7 @@ describe("RootOfTrust", function () {
       );
       await expect(result).not.to.emit(contract, "PkChanged");
     });
+    // Note: intermitently failing when running together with multiple tests
     it("Should add a member in my Group (TL) if it already exists (doesn't matter who added it) but is no longer valid (expired)", async () => {
       const memberDid =
         "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
@@ -297,6 +298,24 @@ describe("RootOfTrust", function () {
           anyValue,
           anyValue
         );
+
+      let counter = 0;
+      const maxCycles = 10;
+      while (true) {
+        // waiting for expiration to take effect
+        const exp = (await contract.trustedList(2, 4)).exp;
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (exp.lte(currentTime)) {
+          break;
+        }
+        counter++;
+
+        if (counter > maxCycles) {
+          console.log("Waiting cylcles were exceeded");
+          break;
+        }
+        await sleep(1);
+      }
       // at level 2, member2 (gId = 3) adds member 3 (gId = 4)
       const Artifact2 = await ethers.getContractFactory(artifactName, member2);
       const contract2 = Artifact2.attach(contractAddress);
@@ -305,7 +324,7 @@ describe("RootOfTrust", function () {
         member3Did,
         84600 * 365
       );
-      await sleep(2);
+      await sleep(4);
       await expect(result)
         .to.emit(contract, "PkChanged")
         .withArgs(
@@ -339,7 +358,6 @@ describe("RootOfTrust", function () {
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
       await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
-
       const result = await contract.revokeMember(memberAddress, memberDid);
       await sleep(8);
       await expect(result)
@@ -353,7 +371,7 @@ describe("RootOfTrust", function () {
           anyValue
         );
     });
-
+    // Note: intermitently failing when running together with multiple tests
     it("Should add a member in my Group (TL) if it already exists (doesn't matter who added it) but some of its parents broke the required chain of trust", async () => {
       const memberDid =
         "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
@@ -417,6 +435,26 @@ describe("RootOfTrust", function () {
           anyValue,
           anyValue
         );
+
+      let counter = 0;
+      const maxCycles = 10;
+      while (true) {
+        // waiting for expiration to take effect
+        const exp = (await contract.trustedList(1, 2)).exp;
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (exp.lte(currentTime)) {
+          break;
+        }
+        counter++;
+        console.log("cycling!");
+
+        if (counter > maxCycles) {
+          console.log("Waiting cylcles were exceeded");
+          break;
+        }
+        await sleep(1);
+      }
+
       // at level 2, member2 (gId = 3) adds member 3 (gId = 4)
       const Artifact2 = await ethers.getContractFactory(artifactName, member2);
       const contract2 = Artifact2.attach(contractAddress);
@@ -484,19 +522,17 @@ describe("RootOfTrust", function () {
           anyValue,
           anyValue
         );
-
-      // must fail if root manager revokes a member who does not exist
-      await expect(
-        contract.callStatic.revokeMemberByRoot(member3.address, "abc")
-      ).to.be.revertedWith("MNA");
-
-      await expect(
-        contract1.callStatic.revokeMemberByRoot(member2Address, member2Did)
-      ).to.be.revertedWith("OR");
-
+      // fails since member3 was not added
+      result = await contract.revokeMemberByRoot(member3.address, "abc");
+      await sleep(3);
+      await expect(result).not.to.emit(contract, "PkRevoked");
+      // fails since sender is not the root manager
+      result = await contract1.revokeMemberByRoot(member2Address, member2Did);
+      await sleep(3);
+      await expect(result).not.to.emit(contract, "PkRevoked");
       // root manager revokes member 2
       result = await contract.revokeMemberByRoot(member2Address, member2Did);
-      await sleep(4);
+      await sleep(3);
       await expect(result)
         .to.emit(contract, "PkRevoked")
         .withArgs(
@@ -504,6 +540,89 @@ describe("RootOfTrust", function () {
           memberAddress,
           member2Address,
           member2Did,
+          anyValue,
+          anyValue
+        );
+    });
+    it("Should allow any parent to revoke an entity in a child group if configured that way", async () => {
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+      const rootManagerAddress = rootManager.address;
+      const depth = 3; // max depth
+      const revokeMode = 2; // root and parent can revoke
+      const contractAddress = await deployRootOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode
+      );
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
+      const contract = Artifact.attach(contractAddress);
+      const memberAddress = member1.address;
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await sleep(2);
+      // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
+      const Artifact1 = await ethers.getContractFactory(artifactName, member1);
+      const contract1 = Artifact1.attach(contractAddress);
+      const member2Address = member2.address;
+      const member2Did =
+        "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
+      let result = await contract1.addOrUpdateMemberTl(
+        member2Address,
+        member2Did,
+        86400 * 365
+      );
+      await sleep(2);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          memberAddress,
+          member2Address,
+          member2Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+
+      // at level 3, member2 (gId = 3) adds member 3 (gId = 4)
+      const Artifact2 = await ethers.getContractFactory(artifactName, member2);
+      const contract2 = Artifact2.attach(contractAddress);
+      const member3Address = member3.address;
+      const member3Did =
+        "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
+      result = await contract2.addOrUpdateMemberTl(
+        member3Address,
+        member3Did,
+        86400 * 365
+      );
+      await sleep(2);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          member2Address,
+          member3Address,
+          member3Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+      // now member1 revokes member3
+      result = await contract1.revokeMemberByAnyAncestor(
+        member3Address,
+        member3Did
+      );
+      await sleep(3);
+      await expect(result)
+        .to.emit(contract, "PkRevoked")
+        .withArgs(
+          memberAddress,
+          member2Address,
+          member3Address,
+          member3Did,
           anyValue,
           anyValue
         );

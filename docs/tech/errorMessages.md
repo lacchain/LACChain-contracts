@@ -20,9 +20,11 @@
 - MDEIYR -> Member does not exist in your registry
 - DDM -> Did does not match
 - MAE -> Member Already Expired
-- RBYRNE -> Revocation by Root Not Enabled
+- RBRNE -> Revocation by Root Not Enabled
+- RBAANE -> Revocation by All Ancestors Not Enabled
 - OR -> Only Root
 - MNA -> Member Not Added
+- RC -> Revoked Chain
 
 - TLAO -> Trusted List Already Onboarded
 - TLAA -> Trusted List Already Added
