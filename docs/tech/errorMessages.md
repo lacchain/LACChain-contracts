@@ -25,6 +25,7 @@
 - OR -> Only Root
 - MNA -> Member Not Added
 - RC -> Revoked Chain
+- ISC -> Invalid Status Change
 
 - TLAO -> Trusted List Already Onboarded
 - TLAA -> Trusted List Already Added

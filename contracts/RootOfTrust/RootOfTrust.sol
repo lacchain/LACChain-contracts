@@ -19,7 +19,8 @@ contract RootOfTrust is Ownable, IRootOfTrust {
     mapping(uint256 => uint256) public trustedBy;
 
     uint8 public depth;
-    uint8 revokeConfigMode;
+    uint8 public revokeConfigMode;
+    bool public isRootMaintainer;
     uint8 public constant ROOTANDPARENT = 1;
     uint8 public constant ALLANCESTORS = 2;
 
@@ -28,20 +29,37 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         uint8 rootDepth,
         string memory did,
         address rootEntityManager,
-        uint8 revokeMode
+        uint8 revokeMode,
+        bool rootMaintainer
     ) BaseRelayRecipient(trustedForwarderAddress) {
         depth = rootDepth;
         tlCounter++;
         revokeConfigMode = revokeMode;
         _configTl(tlCounter, did, rootEntityManager);
+        isRootMaintainer = rootMaintainer;
     }
 
     uint256 prevBlock;
 
-    function updateDepth(uint8 rootDepth) external onlyOwner {
-        // todo validate whether only owner
+    function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
+        isRootMaintainer = rootMaintainer;
+        require(isRootMaintainer != rootMaintainer, "ISC");
+        emit MaintainerModeChange(isRootMaintainer, prevBlock);
+    }
+
+    function updateDepth(uint8 rootDepth) external {
+        _validateMaintainer();
+        uint8 prevDepth = depth;
         depth = rootDepth;
-        emit DepthChange(depth, prevBlock);
+        emit DepthChange(prevDepth, depth, prevBlock);
+        prevBlock = block.number;
+    }
+
+    function updateRevokeMode(uint8 revokeMode) external {
+        _validateMaintainer();
+        uint8 prevRevokeMode = revokeConfigMode;
+        revokeConfigMode = revokeMode;
+        emit RevokeModeChange(prevRevokeMode, revokeMode, prevBlock);
         prevBlock = block.number;
     }
 
@@ -255,5 +273,14 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         require(trustedList[parentGId][memberGId].exp > block.timestamp, "RC");
         if (parentGId == actorGId) return true;
         return _checkAncestor(actorGId, parentGId);
+    }
+
+    function _validateMaintainer() private view {
+        if (isRootMaintainer) {
+            require(group[_msgSender()].gId == 1, "NA");
+            return;
+        }
+
+        require(owner() == _msgSender(), "Ownable: caller is not the owner");
     }
 }

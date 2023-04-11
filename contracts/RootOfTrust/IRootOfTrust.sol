@@ -12,7 +12,13 @@ interface IRootOfTrust {
         uint256 iat;
         uint256 exp;
     }
-    event DepthChange(uint8 depth, uint256 prevBlock);
+    event DepthChange(uint8 prevDepth, uint8 depth, uint256 prevBlock);
+    event RevokeModeChange(
+        uint8 prevRevokeMode,
+        uint8 revokeMode,
+        uint256 prevBlock
+    );
+    event MaintainerModeChange(bool isRootMaintainer, uint256 prevBlock);
     event TlConfigChange(address indexed tl, string did, uint256 prevBlock);
     event MemberOnboarded(address indexed tl, uint256 prevBlock);
     event PkChanged(
