@@ -30,6 +30,9 @@ const config: HardhatUserConfig = {
     runOnCompile: true,
     strict: true,
   },
+  mocha: {
+    timeout: 500000,
+  },
 };
 
 // Adding Base Relay Address to HardhatRuntimeEnvironment

@@ -12,6 +12,7 @@ interface IRootOfTrust {
         uint256 iat;
         uint256 exp;
     }
+    event DidChanged(address entity, string did, uint256 prevBlock);
     event DepthChange(uint8 prevDepth, uint8 depth, uint256 prevBlock);
     event RevokeModeChange(
         uint8 prevRevokeMode,

@@ -26,6 +26,7 @@
 - MNA -> Member Not Added
 - RC -> Revoked Chain
 - ISC -> Invalid Status Change
+- MIRC -> Member In Revoked Chain
 
 - TLAO -> Trusted List Already Onboarded
 - TLAA -> Trusted List Already Added

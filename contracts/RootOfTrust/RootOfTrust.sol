@@ -63,6 +63,16 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         prevBlock = block.number;
     }
 
+    function updateDid(string memory did) external {
+        address memberAddress = _msgSender();
+        groupDetail storage detail = group[memberAddress];
+        require(_checkChainOfTrustByExpiration(detail.gId), "MIRC");
+        address didAddress = _computeAddress(did);
+        detail.didAddress = didAddress;
+        emit DidChanged(memberAddress, did, prevBlock);
+        prevBlock = block.number;
+    }
+
     function _configTl(
         uint256 gId,
         string memory did,

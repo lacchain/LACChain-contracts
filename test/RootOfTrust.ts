@@ -629,7 +629,7 @@ describe("RootOfTrust", function () {
           anyValue
         );
     });
-    it("Should allow updating revoke config mode to root entity as maintainer", async () => {
+    it("Should allow updating revoke config mode and depth to root entity as maintainer", async () => {
       const rootManagerAddress = rootManager.address;
       const depth = 3; // max depth
       const revokeMode = 2; // root and parent can revoke
@@ -668,6 +668,99 @@ describe("RootOfTrust", function () {
       expect(result)
         .to.emit(contract, "RevokeModeChange")
         .withArgs(2, 0, anyValue);
+    });
+    it("Should allow a member to update their did", async () => {
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+      const rootManagerAddress = rootManager.address;
+      const depth = 3; // max depth
+      const revokeMode = 2; // root and parent can revoke
+      const contractAddress = await deployRootOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode
+      );
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
+      const contract = Artifact.attach(contractAddress);
+      const memberAddress = member1.address;
+      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await sleep(2);
+      // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
+      const Artifact1 = await ethers.getContractFactory(artifactName, member1);
+      const contract1 = Artifact1.attach(contractAddress);
+      const member2Address = member2.address;
+      const member2Did =
+        "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
+      let result = await contract1.addOrUpdateMemberTl(
+        member2Address,
+        member2Did,
+        86400 * 365
+      );
+      await sleep(2);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          memberAddress,
+          member2Address,
+          member2Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+
+      // at level 3, member2 (gId = 3) adds member 3 (gId = 4)
+      const Artifact2 = await ethers.getContractFactory(artifactName, member2);
+      const contract2 = Artifact2.attach(contractAddress);
+      const member3Address = member3.address;
+      const member3Did =
+        "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
+      result = await contract2.addOrUpdateMemberTl(
+        member3Address,
+        member3Did,
+        86400 * 365
+      );
+      await sleep(2);
+      await expect(result)
+        .to.emit(contract, "PkChanged")
+        .withArgs(
+          member2Address,
+          member3Address,
+          member3Did,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+
+      const Artifact3 = await ethers.getContractFactory(artifactName, member3);
+      const contract3 = Artifact3.attach(contractAddress);
+      const newMember3Did =
+        "did:web:lacchain.id:0YbXNNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZXYvnP2Z";
+
+      result = await contract3.updateDid(newMember3Did);
+      await sleep(2);
+      await expect(result)
+        .to.emit(contract3, "DidChanged")
+        .withArgs(member3.address, newMember3Did, anyValue);
+
+      // revoking
+      result = await contract1.revokeMemberByAnyAncestor(
+        member3.address,
+        newMember3Did
+      );
+      await sleep(2);
+      await expect(result).to.emit(contract1, "PkRevoked");
+
+      const new2Member3Did =
+        "did:web:lacchain.id:1NbXNNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZXYvnP2Z";
+
+      result = await contract3.updateDid(new2Member3Did);
+      await sleep(2);
+      await expect(result).not.to.emit(contract3, "DidChanged");
     });
   });
 
