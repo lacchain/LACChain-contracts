@@ -7,14 +7,14 @@ import "./IRootOfTrust.sol";
 import "../utils/Ownable.sol";
 
 contract RootOfTrust is Ownable, IRootOfTrust {
-    uint256 public tlCounter;
+    uint256 public memberCounter;
     // entityManager => (gId, didAddress)
     mapping(address => groupDetail) public group;
     // gId => entityManager
     mapping(uint256 => address) manager;
 
     // gIdParent => gIdMember  => groupMemberDetail
-    mapping(uint256 => mapping(uint256 => TlDetail)) public trustedList;
+    mapping(uint256 => mapping(uint256 => MemberDetail)) public trustedList;
 
     mapping(uint256 => uint256) public trustedBy;
 
@@ -33,9 +33,9 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         bool rootMaintainer
     ) BaseRelayRecipient(trustedForwarderAddress) {
         depth = rootDepth;
-        tlCounter++;
+        memberCounter++;
         revokeConfigMode = revokeMode;
-        _configTl(tlCounter, did, rootEntityManager);
+        _configTl(memberCounter, did, rootEntityManager);
         isRootMaintainer = rootMaintainer;
     }
 
@@ -44,14 +44,14 @@ contract RootOfTrust is Ownable, IRootOfTrust {
     function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
         isRootMaintainer = rootMaintainer;
         require(isRootMaintainer != rootMaintainer, "ISC");
-        emit MaintainerModeChange(isRootMaintainer, prevBlock);
+        emit MaintainerModeChanged(isRootMaintainer, prevBlock);
     }
 
     function updateDepth(uint8 rootDepth) external {
         _validateMaintainer();
         uint8 prevDepth = depth;
         depth = rootDepth;
-        emit DepthChange(prevDepth, depth, prevBlock);
+        emit DepthChanged(prevDepth, depth, prevBlock);
         prevBlock = block.number;
     }
 
@@ -59,7 +59,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         _validateMaintainer();
         uint8 prevRevokeMode = revokeConfigMode;
         revokeConfigMode = revokeMode;
-        emit RevokeModeChange(prevRevokeMode, revokeMode, prevBlock);
+        emit RevokeModeChanged(prevRevokeMode, revokeMode, prevBlock);
         prevBlock = block.number;
     }
 
@@ -83,7 +83,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         manager[gId] = entityManager;
         address didAddr = _computeAddress(did);
         gd.didAddress = didAddr;
-        emit TlConfigChange(entityManager, did, prevBlock);
+        emit MemberConfigChanged(entityManager, did, prevBlock);
         prevBlock = block.number;
     }
 
@@ -143,12 +143,12 @@ contract RootOfTrust is Ownable, IRootOfTrust {
     ) private {
         uint256 parentGId = group[parentEntity].gId;
         uint256 memberGId = group[memberEntity].gId;
-        TlDetail storage d = trustedList[parentGId][memberGId];
+        MemberDetail storage d = trustedList[parentGId][memberGId];
         uint256 currentTime = block.timestamp;
         require(d.exp > currentTime, "MAE");
         _validateDidMatch(did, memberEntity);
         d.exp = currentTime;
-        emit PkRevoked(
+        emit GroupMemberRevoked(
             revokerEntity,
             parentEntity,
             memberEntity,
@@ -184,8 +184,8 @@ contract RootOfTrust is Ownable, IRootOfTrust {
             memberGId = g.gId;
             _validateDidMatch(memberDid, memberEntity);
         } else {
-            tlCounter++;
-            memberGId = tlCounter;
+            memberCounter++;
+            memberGId = memberCounter;
             _configTl(memberGId, memberDid, memberEntity);
         }
         require(parentGId > 0, "NA");
@@ -193,12 +193,12 @@ contract RootOfTrust is Ownable, IRootOfTrust {
 
         uint256 iat = _getTimestamp();
 
-        TlDetail storage t = trustedList[parentGId][memberGId];
+        MemberDetail storage t = trustedList[parentGId][memberGId];
         // require(t.iat == uint256(0), "TLAA"); // todo: check
         trustedBy[memberGId] = parentGId;
         t.iat = iat;
         t.exp = exp;
-        emit PkChanged(
+        emit GroupMemberChanged(
             parentEntity,
             memberEntity,
             memberDid,

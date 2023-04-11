@@ -8,21 +8,24 @@ interface IRootOfTrust {
         address didAddress;
     }
 
-    struct TlDetail {
+    struct MemberDetail {
         uint256 iat;
         uint256 exp;
     }
     event DidChanged(address entity, string did, uint256 prevBlock);
-    event DepthChange(uint8 prevDepth, uint8 depth, uint256 prevBlock);
-    event RevokeModeChange(
+    event DepthChanged(uint8 prevDepth, uint8 depth, uint256 prevBlock);
+    event RevokeModeChanged(
         uint8 prevRevokeMode,
         uint8 revokeMode,
         uint256 prevBlock
     );
-    event MaintainerModeChange(bool isRootMaintainer, uint256 prevBlock);
-    event TlConfigChange(address indexed tl, string did, uint256 prevBlock);
-    event MemberOnboarded(address indexed tl, uint256 prevBlock);
-    event PkChanged(
+    event MaintainerModeChanged(bool isRootMaintainer, uint256 prevBlock);
+    event MemberConfigChanged(
+        address indexed entityAddress,
+        string did,
+        uint256 prevBlock
+    );
+    event GroupMemberChanged(
         address indexed parentEntity,
         address indexed memberEntity,
         string did,
@@ -31,7 +34,7 @@ interface IRootOfTrust {
         uint256 prevBlock
     );
 
-    event PkRevoked(
+    event GroupMemberRevoked(
         address indexed revokerEntity,
         address indexed parentEntity,
         address indexed memberEntity,
@@ -40,9 +43,29 @@ interface IRootOfTrust {
         uint256 prevBlock
     );
 
+    function updateMaintainerMode(bool rootMaintainer) external;
+
+    function updateDepth(uint8 rootDepth) external;
+
+    function updateRevokeMode(uint8 revokeMode) external;
+
+    function updateDid(string memory did) external;
+
     function addOrUpdateMemberTl(
         address memberEntity,
         string memory did,
         uint256 period
+    ) external;
+
+    function revokeMember(address memberEntity, string memory did) external;
+
+    function revokeMemberByRoot(
+        address memberEntity,
+        string memory did
+    ) external;
+
+    function revokeMemberByAnyAncestor(
+        address memberEntity,
+        string memory did
     ) external;
 }

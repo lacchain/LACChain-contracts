@@ -70,10 +70,10 @@ describe("RootOfTrust", function () {
       const didAddress = getAddressFromDid(memberDid);
       expect(t.didAddress.substring(2).toLowerCase()).to.equal(didAddress);
       await expect(result)
-        .to.emit(contract, "TlConfigChange")
+        .to.emit(contract, "MemberConfigChanged")
         .withArgs(memberAddress, memberDid, anyValue);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           rootManagerAddress,
           memberAddress,
@@ -117,7 +117,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(2);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           memberAddress,
           member2Address,
@@ -190,7 +190,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(2);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           rootManagerAddress,
           memberAddress,
@@ -207,7 +207,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(2);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           rootManagerAddress,
           memberAddress,
@@ -247,7 +247,7 @@ describe("RootOfTrust", function () {
         member2Did,
         86400 * 365
       );
-      await expect(result).not.to.emit(contract, "PkChanged");
+      await expect(result).not.to.emit(contract, "GroupMemberChanged");
     });
     // Note: intermitently failing when running together with multiple tests
     it("Should add a member in my Group (TL) if it already exists (doesn't matter who added it) but is no longer valid (expired)", async () => {
@@ -291,7 +291,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(4);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           memberAddress,
           member3Address,
@@ -328,7 +328,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(4);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           member2Address,
           member3Address,
@@ -342,6 +342,7 @@ describe("RootOfTrust", function () {
       const member2Group = await contract2.group(member2Address);
       expect(t1).to.equal(member2Group.gId);
     });
+    // Note: intermitently failing when running together with multiple tests
     it("Should revoke a member in my Group (TL)", async () => {
       const memberDid =
         "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
@@ -363,7 +364,7 @@ describe("RootOfTrust", function () {
       const result = await contract.revokeMember(memberAddress, memberDid);
       await sleep(8);
       await expect(result)
-        .to.emit(contract, "PkRevoked")
+        .to.emit(contract, "GroupMemberRevoked")
         .withArgs(
           rootManagerAddress,
           rootManagerAddress,
@@ -415,7 +416,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(4);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           memberAddress,
           member3Address,
@@ -428,7 +429,7 @@ describe("RootOfTrust", function () {
       result = await contract.revokeMember(memberAddress, memberDid);
       await sleep(4);
       await expect(result)
-        .to.emit(contract, "PkRevoked")
+        .to.emit(contract, "GroupMemberRevoked")
         .withArgs(
           rootManagerAddress,
           rootManagerAddress,
@@ -467,7 +468,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(4);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           member2Address,
           member3Address,
@@ -515,7 +516,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(2);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           memberAddress,
           member2Address,
@@ -527,16 +528,16 @@ describe("RootOfTrust", function () {
       // fails since member3 was not added
       result = await contract.revokeMemberByRoot(member3.address, "abc");
       await sleep(3);
-      await expect(result).not.to.emit(contract, "PkRevoked");
+      await expect(result).not.to.emit(contract, "GroupMemberRevoked");
       // fails since sender is not the root manager
       result = await contract1.revokeMemberByRoot(member2Address, member2Did);
       await sleep(3);
-      await expect(result).not.to.emit(contract, "PkRevoked");
+      await expect(result).not.to.emit(contract, "GroupMemberRevoked");
       // root manager revokes member 2
       result = await contract.revokeMemberByRoot(member2Address, member2Did);
       await sleep(3);
       await expect(result)
-        .to.emit(contract, "PkRevoked")
+        .to.emit(contract, "GroupMemberRevoked")
         .withArgs(
           rootManagerAddress,
           memberAddress,
@@ -580,7 +581,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(2);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           memberAddress,
           member2Address,
@@ -603,7 +604,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(2);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           member2Address,
           member3Address,
@@ -619,7 +620,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(3);
       await expect(result)
-        .to.emit(contract, "PkRevoked")
+        .to.emit(contract, "GroupMemberRevoked")
         .withArgs(
           memberAddress,
           member2Address,
@@ -651,22 +652,22 @@ describe("RootOfTrust", function () {
       const contract = Artifact.attach(contractAddress);
 
       let result = await contract.updateDepth(1);
-      expect(result).not.to.emit(contract, "DepthChange");
+      expect(result).not.to.emit(contract, "DepthChanged");
       result = await contract.updateRevokeMode(0);
-      expect(result).not.to.emit(contract, "RevokeModeChange");
+      expect(result).not.to.emit(contract, "RevokeModeChanged");
 
       // owner updates maintainer mode so root can update now
       result = await c0.updateMaintainerMode(true);
       expect(result)
-        .to.emit(c0, "MaintainerModeChange")
+        .to.emit(c0, "MaintainerModeChanged")
         .withArgs(true, anyValue);
 
       // since "isRootMaintainer" is true then rootManager can update "depth" and "revocationMode" properties
       result = await contract.updateDepth(1);
-      expect(result).to.emit(contract, "DepthChange").withArgs(3, 1, anyValue);
+      expect(result).to.emit(contract, "DepthChanged").withArgs(3, 1, anyValue);
       result = await contract.updateRevokeMode(0);
       expect(result)
-        .to.emit(contract, "RevokeModeChange")
+        .to.emit(contract, "RevokeModeChanged")
         .withArgs(2, 0, anyValue);
     });
     it("Should allow a member to update their did", async () => {
@@ -703,7 +704,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(2);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           memberAddress,
           member2Address,
@@ -726,7 +727,7 @@ describe("RootOfTrust", function () {
       );
       await sleep(2);
       await expect(result)
-        .to.emit(contract, "PkChanged")
+        .to.emit(contract, "GroupMemberChanged")
         .withArgs(
           member2Address,
           member3Address,
@@ -753,7 +754,7 @@ describe("RootOfTrust", function () {
         newMember3Did
       );
       await sleep(2);
-      await expect(result).to.emit(contract1, "PkRevoked");
+      await expect(result).to.emit(contract1, "GroupMemberRevoked");
 
       const new2Member3Did =
         "did:web:lacchain.id:1NbXNNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZXYvnP2Z";
