@@ -14,7 +14,8 @@ describe("RootOfTrust", function () {
     depth: number,
     did: string,
     rootManagerAddress: string,
-    revokeMode = 0
+    revokeMode = 0,
+    isRootMaintainer = false // means only owner maintains "depth" and "reovocation mode"
   ): Promise<string> {
     const Artifact = await ethers.getContractFactory(artifactName, owner);
     const instance = await lacchain.deployContract(
@@ -23,7 +24,8 @@ describe("RootOfTrust", function () {
       depth,
       did,
       rootManagerAddress, // root account manager
-      revokeMode
+      revokeMode,
+      isRootMaintainer
     );
     return instance.address;
   }
@@ -626,6 +628,46 @@ describe("RootOfTrust", function () {
           anyValue,
           anyValue
         );
+    });
+    it("Should allow updating revoke config mode to root entity as maintainer", async () => {
+      const rootManagerAddress = rootManager.address;
+      const depth = 3; // max depth
+      const revokeMode = 2; // root and parent can revoke
+      const isRootMaintainer = false;
+      const contractAddress = await deployRootOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode,
+        isRootMaintainer
+      );
+      const A0 = await ethers.getContractFactory(artifactName, owner);
+      const c0 = A0.attach(contractAddress);
+
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        rootManager
+      );
+      const contract = Artifact.attach(contractAddress);
+
+      let result = await contract.updateDepth(1);
+      expect(result).not.to.emit(contract, "DepthChange");
+      result = await contract.updateRevokeMode(0);
+      expect(result).not.to.emit(contract, "RevokeModeChange");
+
+      // owner updates maintainer mode so root can update now
+      result = await c0.updateMaintainerMode(true);
+      expect(result)
+        .to.emit(c0, "MaintainerModeChange")
+        .withArgs(true, anyValue);
+
+      // since "isRootMaintainer" is true then rootManager can update "depth" and "revocationMode" properties
+      result = await contract.updateDepth(1);
+      expect(result).to.emit(contract, "DepthChange").withArgs(3, 1, anyValue);
+      result = await contract.updateRevokeMode(0);
+      expect(result)
+        .to.emit(contract, "RevokeModeChange")
+        .withArgs(2, 0, anyValue);
     });
   });
 
