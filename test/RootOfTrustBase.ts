@@ -3,8 +3,8 @@ import { expect } from "chai";
 import { ethers, lacchain } from "hardhat";
 import { keccak256 } from "ethers/lib/utils";
 
-describe("RootOfTrust", function () {
-  const artifactName = "RootOfTrust";
+const artifactName = "RootOfTrustBase";
+describe(artifactName, function () {
   const [owner, rootManager, member1, member2, member3] = lacchain.getSigners();
   const depth = 3;
   const did =
