@@ -1,8 +1,8 @@
-//SPDX-License-Identifier: UNLICENSED
+//SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.18;
 
-interface IRootOfTrust {
+interface IRootOfTrustBase {
     struct groupDetail {
         uint256 gId;
         address didAddress;
@@ -51,7 +51,7 @@ interface IRootOfTrust {
 
     function updateDid(string memory did) external;
 
-    function addOrUpdateMemberTl(
+    function addOrUpdateGroupMember(
         address memberEntity,
         string memory did,
         uint256 period

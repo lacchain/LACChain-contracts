@@ -60,7 +60,7 @@ describe("RootOfTrust", function () {
       );
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      const result = await contract.addOrUpdateMemberTl(
+      const result = await contract.addOrUpdateGroupMember(
         memberAddress,
         memberDid,
         86400 * 365
@@ -102,7 +102,11 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
       await sleep(2);
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
@@ -110,7 +114,7 @@ describe("RootOfTrust", function () {
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      const result = await contract1.addOrUpdateMemberTl(
+      const result = await contract1.addOrUpdateGroupMember(
         member2Address,
         member2Did,
         86400 * 365
@@ -148,7 +152,11 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
       await sleep(2);
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3) --> must fails since depth is 1
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
@@ -156,7 +164,7 @@ describe("RootOfTrust", function () {
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      const result = await contract1.addOrUpdateMemberTl(
+      const result = await contract1.addOrUpdateGroupMember(
         member2Address,
         member2Did,
         86400 * 365
@@ -183,7 +191,7 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      let result = await contract.addOrUpdateMemberTl(
+      let result = await contract.addOrUpdateGroupMember(
         memberAddress,
         memberDid,
         86400 * 365
@@ -200,7 +208,7 @@ describe("RootOfTrust", function () {
           anyValue
         );
       // Updating ...
-      result = await contract.addOrUpdateMemberTl(
+      result = await contract.addOrUpdateGroupMember(
         memberAddress,
         memberDid,
         86400 * 20
@@ -234,7 +242,7 @@ describe("RootOfTrust", function () {
       );
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 2); // validity for just 2 seconds
+      await contract.addOrUpdateGroupMember(memberAddress, memberDid, 2); // validity for just 2 seconds
       await sleep(3);
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
@@ -242,7 +250,7 @@ describe("RootOfTrust", function () {
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      const result = await contract1.addOrUpdateMemberTl(
+      const result = await contract1.addOrUpdateGroupMember(
         member2Address,
         member2Did,
         86400 * 365
@@ -267,12 +275,16 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
       // at level 1, rootManager (gId = 1) adds member 2 (gId = 3)
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      await contract.addOrUpdateMemberTl(
+      await contract.addOrUpdateGroupMember(
         member2Address,
         member2Did,
         86400 * 365
@@ -284,7 +296,7 @@ describe("RootOfTrust", function () {
       const member3Address = member3.address;
       const member3Did =
         "did:web:lacchain.id:0vBrrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb4C";
-      let result = await contract1.addOrUpdateMemberTl(
+      let result = await contract1.addOrUpdateGroupMember(
         member3Address,
         member3Did,
         1 // for just 1 second
@@ -321,7 +333,7 @@ describe("RootOfTrust", function () {
       // at level 2, member2 (gId = 3) adds member 3 (gId = 4)
       const Artifact2 = await ethers.getContractFactory(artifactName, member2);
       const contract2 = Artifact2.attach(contractAddress);
-      result = await contract2.addOrUpdateMemberTl(
+      result = await contract2.addOrUpdateGroupMember(
         member3Address,
         member3Did,
         84600 * 365
@@ -360,7 +372,11 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
       const result = await contract.revokeMember(memberAddress, memberDid);
       await sleep(8);
       await expect(result)
@@ -392,12 +408,16 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
       // at level 1, rootManager (gId = 1) adds member 2 (gId = 3)
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      await contract.addOrUpdateMemberTl(
+      await contract.addOrUpdateGroupMember(
         member2Address,
         member2Did,
         86400 * 365
@@ -409,7 +429,7 @@ describe("RootOfTrust", function () {
       const member3Address = member3.address;
       const member3Did =
         "did:web:lacchain.id:0vBrrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb4C";
-      let result = await contract1.addOrUpdateMemberTl(
+      let result = await contract1.addOrUpdateGroupMember(
         member3Address,
         member3Did,
         86400 * 365
@@ -461,7 +481,7 @@ describe("RootOfTrust", function () {
       // at level 2, member2 (gId = 3) adds member 3 (gId = 4)
       const Artifact2 = await ethers.getContractFactory(artifactName, member2);
       const contract2 = Artifact2.attach(contractAddress);
-      result = await contract2.addOrUpdateMemberTl(
+      result = await contract2.addOrUpdateGroupMember(
         member3Address,
         member3Did,
         84600 * 365
@@ -501,7 +521,11 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
       await sleep(2);
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
@@ -509,7 +533,7 @@ describe("RootOfTrust", function () {
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      let result = await contract1.addOrUpdateMemberTl(
+      let result = await contract1.addOrUpdateGroupMember(
         member2Address,
         member2Did,
         86400 * 365
@@ -566,7 +590,11 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
       await sleep(2);
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
@@ -574,7 +602,7 @@ describe("RootOfTrust", function () {
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      let result = await contract1.addOrUpdateMemberTl(
+      let result = await contract1.addOrUpdateGroupMember(
         member2Address,
         member2Did,
         86400 * 365
@@ -597,7 +625,7 @@ describe("RootOfTrust", function () {
       const member3Address = member3.address;
       const member3Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      result = await contract2.addOrUpdateMemberTl(
+      result = await contract2.addOrUpdateGroupMember(
         member3Address,
         member3Did,
         86400 * 365
@@ -689,7 +717,11 @@ describe("RootOfTrust", function () {
       // at level 1, rootManager (gId = 1) adds member 1 (gId = 2)
       const contract = Artifact.attach(contractAddress);
       const memberAddress = member1.address;
-      await contract.addOrUpdateMemberTl(memberAddress, memberDid, 86400 * 365);
+      await contract.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
       await sleep(2);
       // at level 2, member1 (gId = 2) adds member 2 (gId = 3)
       const Artifact1 = await ethers.getContractFactory(artifactName, member1);
@@ -697,7 +729,7 @@ describe("RootOfTrust", function () {
       const member2Address = member2.address;
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      let result = await contract1.addOrUpdateMemberTl(
+      let result = await contract1.addOrUpdateGroupMember(
         member2Address,
         member2Did,
         86400 * 365
@@ -720,7 +752,7 @@ describe("RootOfTrust", function () {
       const member3Address = member3.address;
       const member3Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
-      result = await contract2.addOrUpdateMemberTl(
+      result = await contract2.addOrUpdateGroupMember(
         member3Address,
         member3Did,
         86400 * 365

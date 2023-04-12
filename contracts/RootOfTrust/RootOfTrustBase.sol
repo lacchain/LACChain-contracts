@@ -2,11 +2,11 @@
 pragma solidity 0.8.18;
 
 import "../Common/BaseRelayRecipient.sol";
-import "./IRootOfTrust.sol";
+import "./IRootOfTrustBase.sol";
 
 import "../utils/Ownable.sol";
 
-contract RootOfTrust is Ownable, IRootOfTrust {
+contract RootOfTrustBase is Ownable, IRootOfTrustBase {
     uint256 public memberCounter;
     // entityManager => (gId, didAddress)
     mapping(address => groupDetail) public group;
@@ -35,7 +35,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         depth = rootDepth;
         memberCounter++;
         revokeConfigMode = revokeMode;
-        _configTl(memberCounter, did, rootEntityManager);
+        _configMember(memberCounter, did, rootEntityManager);
         isRootMaintainer = rootMaintainer;
     }
 
@@ -73,7 +73,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         prevBlock = block.number;
     }
 
-    function _configTl(
+    function _configMember(
         uint256 gId,
         string memory did,
         address entityManager
@@ -87,14 +87,14 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         prevBlock = block.number;
     }
 
-    function addOrUpdateMemberTl(
+    function addOrUpdateGroupMember(
         address memberEntity,
         string memory did,
         uint256 period
     ) external {
         address parentEntity = _msgSender();
         uint256 exp = _getExp(period);
-        _addOrUpdateMemberTl(parentEntity, memberEntity, did, exp);
+        _addOrUpdateGroupMember(parentEntity, memberEntity, did, exp);
     }
 
     function revokeMember(address memberEntity, string memory did) external {
@@ -106,18 +106,33 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         address memberEntity,
         string memory did
     ) external {
-        require(revokeConfigMode == ROOTANDPARENT, "RBRNE");
-        address actor = _msgSender();
-        require(group[actor].gId == 1, "OR");
-        _revokeMemberIndirectly(actor, memberEntity, did);
+        _revokeMemberByRoot(memberEntity, did, _msgSender());
     }
 
     function revokeMemberByAnyAncestor(
         address memberEntity,
         string memory did
     ) external {
+        _revokeMemberByAnyAncestor(_msgSender(), memberEntity, did);
+    }
+
+    function _revokeMemberByRoot(
+        address memberEntity,
+        string memory did,
+        address actor
+    ) internal {
+        require(revokeConfigMode == ROOTANDPARENT, "RBRNE");
+        require(group[actor].gId == 1, "OR");
+        _revokeMemberIndirectly(actor, memberEntity, did);
+    }
+
+    function _revokeMemberByAnyAncestor(
+        address ancestor,
+        address memberEntity,
+        string memory did
+    ) internal {
         require(revokeConfigMode == ALLANCESTORS, "RBAANE");
-        _revokeMemberIndirectly(_msgSender(), memberEntity, did);
+        _revokeMemberIndirectly(ancestor, memberEntity, did);
     }
 
     function _revokeMemberIndirectly(
@@ -140,7 +155,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         address parentEntity,
         address memberEntity,
         string memory did
-    ) private {
+    ) internal {
         uint256 parentGId = group[parentEntity].gId;
         uint256 memberGId = group[memberEntity].gId;
         MemberDetail storage d = trustedList[parentGId][memberGId];
@@ -163,18 +178,18 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         timestamp = block.timestamp;
     }
 
-    function _getExp(uint256 period) private view returns (uint256 exp) {
+    function _getExp(uint256 period) internal view returns (uint256 exp) {
         uint256 currentTime = _getTimestamp();
         require(type(uint256).max - currentTime >= period, "IP");
         exp = currentTime + period;
     }
 
-    function _addOrUpdateMemberTl(
+    function _addOrUpdateGroupMember(
         address parentEntity,
         address memberEntity,
         string memory memberDid,
         uint256 exp
-    ) private {
+    ) internal {
         groupDetail memory g = group[memberEntity];
         // require(g.gId == 0, "MAA"); // todo
         uint256 memberGId;
@@ -186,7 +201,7 @@ contract RootOfTrust is Ownable, IRootOfTrust {
         } else {
             memberCounter++;
             memberGId = memberCounter;
-            _configTl(memberGId, memberDid, memberEntity);
+            _configMember(memberGId, memberDid, memberEntity);
         }
         require(parentGId > 0, "NA");
         _verifyWhetherAChildCanBeAdded(parentGId, depth);
