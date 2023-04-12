@@ -35,6 +35,14 @@ interface IDIDRegistry {
         bool reason
     );
 
+    function getControllers(
+        address subject
+    ) external returns (address[] memory);
+
+    function identityController(
+        address identity
+    ) external view returns (address);
+
     function addController(address identity, address controller) external;
 
     function removeController(address identity, address controller) external;

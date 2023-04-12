@@ -20,11 +20,14 @@ abstract contract BaseRelayRecipient {
      * if the call came through our Relay Hub, return the original sender.
      * should be used in the contract anywhere instead of msg.sender
      */
-    function _msgSender() internal virtual returns (address sender) {
+    function _msgSender() internal view virtual returns (address sender) {
         bytes memory bytesSender;
-        (, bytesSender) = trustedForwarder.call(
+        bool success;
+        (success, bytesSender) = trustedForwarder.staticcall(
             abi.encodeWithSignature("getMsgSender()")
         );
+
+        require(success, "SCF");
 
         return abi.decode(bytesSender, (address));
     }

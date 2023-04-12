@@ -1,6 +1,7 @@
 import { HardhatUserConfig, extendEnvironment } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "./extender";
+import "hardhat-contract-sizer";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.18",
@@ -22,6 +23,12 @@ const config: HardhatUserConfig = {
   gasReporter: {
     enabled: true,
     currency: "USD",
+  },
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: false,
+    runOnCompile: true,
+    strict: true,
   },
 };
 
