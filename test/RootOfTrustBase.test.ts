@@ -1,7 +1,7 @@
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers, lacchain } from "hardhat";
-import { keccak256 } from "ethers/lib/utils";
+import { getAddressFromDid, sleep } from "./util";
 
 const artifactName = "RootOfTrustBase";
 describe(artifactName, function () {
@@ -796,15 +796,4 @@ describe(artifactName, function () {
       await expect(result).not.to.emit(contract3, "DidChanged");
     });
   });
-
-  const sleep = (seconds: number) =>
-    new Promise((resolve, reject) => {
-      setTimeout(() => resolve(true), seconds * 1000);
-    });
-
-  const getAddressFromDid = (did: string): string => {
-    const codedDid = ethers.utils.defaultAbiCoder.encode(["string"], [did]);
-    const hash = keccak256(codedDid);
-    return hash.substring(26);
-  };
 });
