@@ -30,7 +30,7 @@ describe(artifactName, function () {
     return instance.address;
   }
 
-  describe("Deployment", () => {
+  describe("Root of Trust Base", () => {
     it("Should set right values on artifact deployment", async () => {
       const rootManagerAddress = rootManager.address;
       const contractAddress = await deployRootOfTrust(
