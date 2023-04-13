@@ -420,7 +420,7 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address delegate,
         uint validity
     ) public {
-        addDelegate(identity, msg.sender, delegateType, delegate, validity);
+        addDelegate(identity, _msgSender(), delegateType, delegate, validity);
     }
 
     function addDelegateSigned(
@@ -496,7 +496,7 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
     ) public {
         revokeDelegate(
             identity,
-            msg.sender,
+            _msgSender(),
             delegateType,
             delegate,
             revokeDeltaTime,

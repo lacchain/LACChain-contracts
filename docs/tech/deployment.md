@@ -18,4 +18,6 @@ migrations Instance successfully deployed at address: 0xE74B710bCC51fE2B290b8653
 ```sh
  yarn hardhat run --network lacchain scripts/deployDidRegistry.ts # deploys DidRegistry Smart Contract
  yarn hardhat run --network lacchain scripts/deployCredentialRegistry.ts # deploys Credential Registry Smart Contract
+ yarn hardhat run --network lacchain scripts/deployRootOfTrustBase.ts # deploys Base Root Of Trust Smart Contract
+ yarn hardhat run --network lacchain scripts/deployRootOfTrust.ts # deploys Root Of Trust Smart Contract
 ```

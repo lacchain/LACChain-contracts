@@ -11,3 +11,25 @@
 - IC -> Invalid Controller
 - SCF -> Static Call Failed
 - IOHCS -> Invalid OnHold Change Status
+
+## Root Of Trust
+
+- DOOT -> Depth out of trust
+- MAA -> Member Already Added
+- NA -> Not Authorized
+- MDEIYR -> Member does not exist in your registry
+- DDM -> Did does not match
+- MAE -> Member Already Expired
+- RBRNE -> Revocation by Root Not Enabled
+- RBAANE -> Revocation by All Ancestors Not Enabled
+- OR -> Only Root
+- MNA -> Member Not Added
+- RC -> Revoked Chain
+- ISC -> Invalid Status Change
+- MIRC -> Member In Revoked Chain
+
+- TLAO -> Trusted List Already Onboarded
+- TLAA -> Trusted List Already Added
+- IET -> Invalid Expiration Time
+- IP -> Invalid Period
+- DDMODE -> Did Does Not Match or Does Not Exist
