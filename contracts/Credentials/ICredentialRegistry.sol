@@ -4,22 +4,6 @@ pragma solidity 0.8.18;
 
 interface ICredentialRegistry {
     /**
-     * @param iat: date at which a data was issued
-     * @param exp: date at which the data is expiring
-     * @note:
-     scenario 1: iat == 0, means a data was never issued via this registry; otherwise issued
-     scenario 2: (iat > 0 && exp == 0) || (exp > current time) , means the data is still valid 
-     scenario 3: exp < current time && exp !=0, means the data has expired (invalid)
-     additionally:
-     scenario 3.1: iat = 0 && scenario 3: means a data was never issued but revoked (invalid)
-     */
-    struct Detail {
-        uint256 iat;
-        uint256 exp;
-        bool onHold;
-    }
-
-    /**
      * Once revoked it will not longer be valid
      */
     function issue(bytes32 digest, uint256 exp, address identity) external;
@@ -47,41 +31,6 @@ interface ICredentialRegistry {
         address issuer,
         bytes32 digest
     ) external view returns (bool);
-
-    event NewIssuance(
-        bytes32 indexed digest,
-        address indexed by,
-        uint iat,
-        uint exp
-    );
-
-    /**
-     * Adding iat to the log allows verfying if the credential was actually issued onchan in the past(iat>0) or 
-     just revoked (iat = 0)
-     */
-    event NewRevocation(
-        bytes32 indexed digest,
-        address indexed by,
-        uint iat,
-        uint exp
-    );
-
-    event NewOnHoldChange(
-        bytes32 indexed digest,
-        address indexed by,
-        bool isOnHold,
-        uint256 currentTime
-    );
-
-    /**
-    * if status true, the added delegate type will be valid for just all delegates under "by" (which represents an identifier for the
-    main identity)
-     */
-    event NewDelegateTypeChange(
-        bytes32 indexed delegateType,
-        address indexed by,
-        bool status
-    );
 
     /**
      * Optional way to register a data change. In this case the delegate sends the data on behalf of the main actor
@@ -125,31 +74,53 @@ interface ICredentialRegistry {
         bool onHoldStatus
     ) external;
 
-    /**
-     * Every entity is able to just add one didRegistry (address).
-     * Main identity is the only that that can add a didRegistry only valid for him
-     * By adding a didRegistry tied to a entity the verification about delegates goes always through that contract
-     */
-    function addDidRegistry(address didRegistryAddress) external;
-
-    /**
-     * removes the custom didRegistry if exists otherwise reverts
-     */
-    function removeDidRegistry() external;
-
-    /**
-     * Returns the didRegistry and delegateType set for an identity
-     */
-    function getDidRegistry(
-        address identity
-    ) external view returns (address didRegistryAddress);
-
-    function addDelegateType(bytes32 delegateType) external;
-
-    function removeDelegateType(bytes32 delegateType) external;
-
-    function isValidDelegateType(
+    function issueSigned(
+        bytes32 digest,
+        uint256 exp,
         address identity,
-        bytes32 delegateType
-    ) external view returns (bool);
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external;
+
+    event NewIssuance(
+        bytes32 indexed digest,
+        address indexed by,
+        uint iat,
+        uint exp
+    );
+
+    /**
+     * Adding iat to the log allows verfying if the credential was actually issued onchan in the past(iat>0) or 
+     just revoked (iat = 0)
+     */
+    event NewRevocation(
+        bytes32 indexed digest,
+        address indexed by,
+        uint iat,
+        uint exp
+    );
+
+    event NewOnHoldChange(
+        bytes32 indexed digest,
+        address indexed by,
+        bool isOnHold,
+        uint256 currentTime
+    );
+
+    /**
+     * @param iat: date at which a data was issued
+     * @param exp: date at which the data is expiring
+     * @note:
+     scenario 1: iat == 0, means a data was never issued via this registry; otherwise issued
+     scenario 2: (iat > 0 && exp == 0) || (exp > current time) , means the data is still valid 
+     scenario 3: exp < current time && exp !=0, means the data has expired (invalid)
+     additionally:
+     scenario 3.1: iat = 0 && scenario 3: means a data was never issued but revoked (invalid)
+     */
+    struct Detail {
+        uint256 iat;
+        uint256 exp;
+        bool onHold;
+    }
 }
