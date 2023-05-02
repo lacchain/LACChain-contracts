@@ -83,6 +83,14 @@ interface ICredentialRegistry {
         bytes32 sigS
     ) external;
 
+    function revokeSigned(
+        bytes32 digest,
+        address identity,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external;
+
     event NewIssuance(
         bytes32 indexed digest,
         address indexed by,

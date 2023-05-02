@@ -21,6 +21,10 @@ contract CredentialRegistry is
     {}
 
     mapping(bytes32 => mapping(address => Detail)) private registers;
+    bytes32 private constant REVOKE_TYPEHASH =
+        keccak256("Revoke(bytes32 digest, address identity)");
+    bytes32 private constant ISSUE_TYPEHASH =
+        keccak256("Issue(bytes32 digest, uint256 exp, address identity)");
 
     function issue(bytes32 digest, uint256 exp, address identity) external {
         _validateController(_msgSender(), identity);
@@ -130,10 +134,14 @@ contract CredentialRegistry is
         bytes32 sigR,
         bytes32 sigS
     ) external {
-        // compute hash
-        bytes memory message = abi.encode(digest, exp, identity, getChainId());
-        message = abi.encode(bytes1(0x19), bytes1(0), this, message);
-        bytes32 hashData = keccak256(message);
+        bytes memory message = abi.encode(
+            ISSUE_TYPEHASH,
+            digest,
+            exp,
+            identity
+        );
+        bytes32 structHash = keccak256(message);
+        bytes32 completeHash = _hashTypedDataV4(structHash);
         address didRegistry = getDidRegistry(identity);
         checkControllerSignature(
             didRegistry,
@@ -141,9 +149,31 @@ contract CredentialRegistry is
             sigV,
             sigR,
             sigS,
-            hashData
+            completeHash
         );
         _issue(identity, digest, exp);
+    }
+
+    function revokeSigned(
+        bytes32 digest,
+        address identity,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external {
+        bytes memory message = abi.encode(REVOKE_TYPEHASH, digest, identity);
+        bytes32 structHash = keccak256(message);
+        bytes32 completeHash = _hashTypedDataV4(structHash); // hash of: business data,contract name, eip712 version, address this, chainId, eip712 signature and salt
+        address didRegistry = getDidRegistry(identity);
+        checkControllerSignature(
+            didRegistry,
+            identity,
+            sigV,
+            sigR,
+            sigS,
+            completeHash
+        );
+        _revoke(identity, digest);
     }
 
     function revokeByDelegate(address identity, bytes32 digest) external {

@@ -3,15 +3,25 @@ pragma solidity 0.8.18;
 
 import "../Common/BaseRelayRecipient.sol";
 import "./IIdentityHandler.sol";
+import "./EIP712/EIP712.sol";
 
-abstract contract IdentityHandler is IIdentityHandler, BaseRelayRecipient {
+abstract contract IdentityHandler is
+    IIdentityHandler,
+    BaseRelayRecipient,
+    EIP712
+{
     bytes32 public defaultDelegateType;
     address public defaultDidRegistry;
     mapping(address => address) public didRegistries;
     // identity => delegateType => bool
     mapping(address => mapping(bytes32 => bool)) public didDelegateTypes;
 
-    constructor(address didRegistry, bytes32 delegateType) {
+    constructor(
+        address didRegistry,
+        bytes32 delegateType,
+        string memory name
+    ) EIP712(name, "1") {
+        // version is expected to be updated if new version is released
         defaultDidRegistry = didRegistry;
         defaultDelegateType = delegateType;
     }
@@ -136,13 +146,5 @@ abstract contract IdentityHandler is IIdentityHandler, BaseRelayRecipient {
         require(didDelegateTypes[_msgSender()][delegateType] != status, "DAA");
         didDelegateTypes[_msgSender()][delegateType] = status;
         emit NewDelegateTypeChange(delegateType, by, status);
-    }
-
-    function getChainId() internal view returns (uint256) {
-        uint256 id;
-        assembly {
-            id := chainid()
-        }
-        return id;
     }
 }
