@@ -11,6 +11,7 @@
 - IC -> Invalid Controller
 - SCF -> Static Call Failed
 - IOHCS -> Invalid OnHold Change Status
+- RNIBE -> Registry not issued by entity
 
 ## Root Of Trust
 

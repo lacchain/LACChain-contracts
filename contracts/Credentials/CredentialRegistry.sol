@@ -33,8 +33,7 @@ contract CredentialRegistry is
 
     function _issue(address by, bytes32 digest, uint256 exp) private {
         Detail memory detail = registers[digest][by];
-        require(detail.exp < block.timestamp && detail.exp != 0, "IC");
-        require(detail.iat == 0 && detail.exp == 0, "RAR");
+        require(detail.iat == 0 && detail.exp != 0, "RAE");
         uint256 iat = block.timestamp;
         detail.iat = iat;
         if (exp > 0) {
@@ -44,6 +43,22 @@ contract CredentialRegistry is
 
         registers[digest][by] = detail;
         emit NewIssuance(digest, by, iat, exp);
+    }
+
+    function update(bytes32 digest, uint256 exp, address identity) external {
+        _validateController(getDidRegistry(identity), _msgSender(), identity);
+        _update(digest, exp, identity);
+    }
+
+    function _update(bytes32 digest, uint256 exp, address by) private {
+        Detail memory detail = registers[digest][by];
+        require(!(detail.exp < block.timestamp && detail.exp != 0), "ER"); // not expiration check
+        require(detail.iat > 0, "RNIBE"); // must be issued check
+        if (exp != detail.exp) {
+            // just skipping exp if zero, to save gas
+            detail.exp = exp;
+        }
+        emit NewUpdate(digest, by, exp);
     }
 
     function revoke(bytes32 digest, address identity) external {

@@ -10,6 +10,13 @@ interface ICredentialRegistry {
 
     function revoke(bytes32 digest, address identity) external;
 
+    /**
+     * A digest can only be updated in the expiration time
+     * If such digest is revoked it throws an exception
+     * If such digest is not issued it throws an exception
+     */
+    function update(bytes32 digest, uint256 exp, address identity) external;
+
     function onHoldChange(
         bytes32 digest,
         address identity,
@@ -133,6 +140,8 @@ interface ICredentialRegistry {
         uint iat,
         uint exp
     );
+
+    event NewUpdate(bytes32 indexed digest, address indexed by, uint exp);
 
     /**
      * Adding iat to the log allows verfying if the credential was actually issued onchan in the past(iat>0) or 
