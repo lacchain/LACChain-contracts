@@ -17,7 +17,7 @@ contract CredentialRegistry is
         bytes32 delegateType
     )
         BaseRelayRecipient(trustedForwarderAddress)
-        IdentityHandler(didRegistry, delegateType)
+        IdentityHandler(didRegistry, delegateType, "CredentialRegistry")
     {}
 
     mapping(bytes32 => mapping(address => Detail)) private registers;
@@ -27,7 +27,7 @@ contract CredentialRegistry is
         keccak256("Issue(bytes32 digest, uint256 exp, address identity)");
 
     function issue(bytes32 digest, uint256 exp, address identity) external {
-        _validateController(_msgSender(), identity);
+        _validateController(getDidRegistry(identity), _msgSender(), identity);
         _issue(identity, digest, exp);
     }
 
@@ -47,7 +47,7 @@ contract CredentialRegistry is
     }
 
     function revoke(bytes32 digest, address identity) external {
-        _validateController(_msgSender(), identity);
+        _validateController(getDidRegistry(identity), _msgSender(), identity);
         _revoke(_msgSender(), digest);
     }
 
@@ -56,7 +56,7 @@ contract CredentialRegistry is
         address identity,
         bool onHoldStatus
     ) external {
-        _validateController(_msgSender(), identity);
+        _validateController(getDidRegistry(identity), _msgSender(), identity);
         _onHoldChange(_msgSender(), digest, onHoldStatus);
     }
 
@@ -154,6 +154,80 @@ contract CredentialRegistry is
         _issue(identity, digest, exp);
     }
 
+    function issueByDelegateSigned(
+        address identity,
+        bytes32 digest,
+        uint256 exp,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external {
+        bytes32 delegateType = _getDefaultDelegateType();
+        _issueByDelegateSigned(
+            delegateType,
+            identity,
+            digest,
+            exp,
+            sigV,
+            sigR,
+            sigS
+        );
+    }
+
+    function issueByDelegateWithCustomTypeSigned(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        uint256 exp,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) public {
+        require(isValidDelegateType(identity, delegateType), "DTNS");
+        _issueByDelegateSigned(
+            delegateType,
+            identity,
+            digest,
+            exp,
+            sigV,
+            sigR,
+            sigS
+        );
+    }
+
+    function _issueByDelegateSigned(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        uint256 exp,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) private {
+        bytes memory message = abi.encode(
+            ISSUE_TYPEHASH,
+            digest,
+            exp,
+            identity
+        );
+        bytes32 structHash = keccak256(message);
+        bytes32 completeHash = _hashTypedDataV4(structHash);
+
+        bytes32 dt = delegateType; // avoid stack too deep
+
+        address didRegistry = getDidRegistry(identity);
+        checkDelegateSignature(
+            didRegistry,
+            identity,
+            sigV,
+            sigR,
+            sigS,
+            completeHash,
+            dt
+        );
+        _issue(identity, digest, exp);
+    }
+
     function revokeSigned(
         bytes32 digest,
         address identity,
@@ -187,6 +261,24 @@ contract CredentialRegistry is
         _revoke(identity, digest);
     }
 
+    function revokeByDelegateSigned(
+        address identity,
+        bytes32 digest,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external {
+        bytes32 delegateType = _getDefaultDelegateType();
+        _revokeByDelegateSigned(
+            delegateType,
+            identity,
+            digest,
+            sigV,
+            sigR,
+            sigS
+        );
+    }
+
     function revokeByDelegateWithCustomType(
         bytes32 delegateType,
         address identity,
@@ -194,6 +286,52 @@ contract CredentialRegistry is
     ) external {
         _validateDelegateWithCustomType(delegateType, identity);
         _revoke(identity, digest);
+    }
+
+    function _revokeByDelegateSigned(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) private {
+        bytes memory message = abi.encode(REVOKE_TYPEHASH, digest, identity);
+        bytes32 structHash = keccak256(message);
+        bytes32 completeHash = _hashTypedDataV4(structHash);
+
+        bytes32 dt = delegateType; // avoid stack too deep
+
+        address didRegistry = getDidRegistry(identity);
+        checkDelegateSignature(
+            didRegistry,
+            identity,
+            sigV,
+            sigR,
+            sigS,
+            completeHash,
+            dt
+        );
+        _revoke(identity, digest);
+    }
+
+    function revokeByDelegateWithCustomTypeSigned(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) public {
+        require(isValidDelegateType(identity, delegateType), "DTNS");
+        _revokeByDelegateSigned(
+            delegateType,
+            identity,
+            digest,
+            sigV,
+            sigR,
+            sigS
+        );
     }
 
     function onHoldByDelegate(

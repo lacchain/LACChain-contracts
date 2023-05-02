@@ -43,11 +43,22 @@ abstract contract IdentityHandler is
         bytes32 hash
     ) internal view returns (address) {
         address signer = ecrecover(hash, sigV, sigR, sigS);
-        (bool success, bytes memory data) = didRegistry.staticcall(
-            abi.encodeWithSignature("identityController(address)", identity)
-        );
-        require(success && signer == abi.decode(data, (address)), "IC");
+        _validateController(didRegistry, signer, identity);
         return signer;
+    }
+
+    function checkDelegateSignature(
+        address didRegistry,
+        address identity,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS,
+        bytes32 hash,
+        bytes32 delegateType
+    ) internal view returns (address) {
+        address delegate = ecrecover(hash, sigV, sigR, sigS);
+        _validateDelegate(didRegistry, identity, delegateType, delegate);
+        return delegate;
     }
 
     function getDidRegistry(
@@ -95,10 +106,10 @@ abstract contract IdentityHandler is
     }
 
     function _validateController(
+        address didRegistry,
         address controller,
         address identity
     ) internal view {
-        address didRegistry = getDidRegistry(identity);
         // call didRegistry by passing the sender and the identity
         (bool success, bytes memory data) = didRegistry.staticcall(
             abi.encodeWithSignature("identityController(address)", identity)

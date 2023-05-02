@@ -91,6 +91,42 @@ interface ICredentialRegistry {
         bytes32 sigS
     ) external;
 
+    function issueByDelegateSigned(
+        address identity,
+        bytes32 digest,
+        uint256 exp,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external;
+
+    function revokeByDelegateSigned(
+        address identity,
+        bytes32 digest,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external;
+
+    function issueByDelegateWithCustomTypeSigned(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        uint256 exp,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external;
+
+    function revokeByDelegateWithCustomTypeSigned(
+        bytes32 delegateType,
+        address identity,
+        bytes32 digest,
+        uint8 sigV,
+        bytes32 sigR,
+        bytes32 sigS
+    ) external;
+
     event NewIssuance(
         bytes32 indexed digest,
         address indexed by,

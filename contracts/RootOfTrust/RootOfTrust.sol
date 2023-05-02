@@ -24,7 +24,7 @@ contract RootOfTrust is RootOfTrustBase, IdentityHandler, IRootOfTrust {
             revokeMode,
             rootMaintainer
         )
-        IdentityHandler(didRegistry, delegateType)
+        IdentityHandler(didRegistry, delegateType, "ChainOfTrust")
     {}
 
     function addOrUpdateGroupMemberByDelegate(
