@@ -42,8 +42,8 @@ contract RootOfTrustBase is Ownable, IRootOfTrustBase {
     uint256 prevBlock;
 
     function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
-        isRootMaintainer = rootMaintainer;
         require(isRootMaintainer != rootMaintainer, "ISC");
+        isRootMaintainer = rootMaintainer;
         emit MaintainerModeChanged(isRootMaintainer, prevBlock);
     }
 
@@ -83,7 +83,7 @@ contract RootOfTrustBase is Ownable, IRootOfTrustBase {
         manager[gId] = entityManager;
         address didAddr = _computeAddress(did);
         gd.didAddress = didAddr;
-        emit MemberConfigChanged(entityManager, did, prevBlock);
+        emit DidChanged(entityManager, did, prevBlock);
         prevBlock = block.number;
     }
 

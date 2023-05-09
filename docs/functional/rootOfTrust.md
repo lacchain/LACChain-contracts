@@ -6,6 +6,7 @@ Root of Trust smart contract is part of a stack of contracts that comprise Chain
 
 - Max depth: Maximum number of steps to go from any entity to the root entity.
 - entity: any participant in the root of trust contract.
+- Root entity: The first trusted entity.
 
 ## Base Considerations
 
@@ -20,22 +21,21 @@ Root of Trust smart contract is part of a stack of contracts that comprise Chain
 - An entity can claim to be associated with a decentralized identifier (did). Validating that claim is accomplished by retrieving the did document according to the did method used in that specific did and verifying whether the entity address appears in that document, the used relationship in the verification method is specified in the PKD Smart Contract. The verification of that claim is outside of the scope of this contract.
 - Any entity can update the decentralized identifier it claims to be is associated with.
 - Revocation Mode refers to the capability to revoke an entity. There are three options:
-  - A parent entity can revoke a child entity it added (always)
-  - Optionally a Root Entity can also revoke any child entity (Only if configured this way) OR
-  - Any parent (including the root entity) can revoke any child entity, only if the parent entity is an ancestor of the child entity (Only if configured this way)
+  - REVOKEMODE=1: A parent entity can revoke a child entity it added AND a Root Entity can also revoke any child entity
+  - REVOKEMODE=2: Any parent (including the root entity) can revoke any child entity, only if the parent
 
 ## Smart Contract Considerations
 
-- Since the concept of Root of Trust involves many entities, on deployment this contract sets a committee that acts as an owner in regards to the decisions taken for the deployed contract. The owner has two group of responsibilities (Business and Owner)
-  - Business Resposibilities are:
+- Since the concept of Root of Trust involves many entities, on deployment this contract sets a committee that acts as an owner in regards to the decisions taken for the deployed contract. The owner has two group of responsibilities (Maintainer and Base)
+  - Maintainer Resposibilities are:
     - update the "depth" parameter (that represents the maximum depth)
     - update the "revocation mode" parameter
-  - Maintainer Resposibilities are:
+  - Base Resposibilities are:
     - Handle Upgrades.
     - Handle the ownership of the contract
-- On contract deployment it is possible to decouple the Business and Maintainer responsibilities in such a way that Business responsibilities are assigned to
-  the root entity. Otherwise it is assigned to the owner of the contract during the contract deployment.
-- The owner can assign, at any time, Business responsibilities to themselves or to the root entity.
+- On contract deployment the deployer is assigned as the first owner, during that phase it is possible to decouple the Maintainer and Base responsibilities in such a way that Maintainer responsibilities are assigned to the root entity (the first trusted entitiy, which is also assigned during contract creation); otherwise it is assigned to the owner of the contract.
+- The owner can reassign, at any time, Maintainer responsibilities to themselves or to the root entity.
+- Base responsibilities are only handled by the owner of the contract.
 
 ## Smart contracts
 
