@@ -4,7 +4,7 @@ Root of Trust smart contract is part of a stack of contracts that comprise Chain
 
 ## Terminology
 
-- depth: Maximum number of steps to go from any entity to the root entity.
+- Max depth: Maximum number of steps to go from any entity to the root entity.
 - entity: any participant in the root of trust contract.
 
 ## Base Considerations
@@ -28,7 +28,7 @@ Root of Trust smart contract is part of a stack of contracts that comprise Chain
 
 - Since the concept of Root of Trust involves many entities, on deployment this contract sets a committee that acts as an owner in regards to the decisions taken for the deployed contract. The owner has two group of responsibilities (Business and Owner)
   - Business Resposibilities are:
-    - update the "depth" parameter.
+    - update the "depth" parameter (that represents the maximum depth)
     - update the "revocation mode" parameter
   - Maintainer Resposibilities are:
     - Handle Upgrades.
@@ -48,3 +48,7 @@ Root of Trust smart contract is architecturally composed by the follings:
 
 - [Root of Trust Base contract](../../contracts/RootOfTrust/IRootOfTrustBase.sol)
 - [Root of Trust](../../contracts/RootOfTrust/IRootOfTrust.sol)
+
+## Didactic Diagram
+
+<img src="../img/RoT.png" width="800">
