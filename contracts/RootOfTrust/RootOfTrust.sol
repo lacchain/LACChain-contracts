@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../utils/IdentityChecker.sol";
+import "../utils/IdentityHandler.sol";
 import "./RootOfTrustBase.sol";
 import "./IRootOfTrust.sol";
 
-contract RootOfTrust is RootOfTrustBase, IdentityChecker, IRootOfTrust {
+contract RootOfTrust is RootOfTrustBase, IdentityHandler, IRootOfTrust {
     constructor(
         address trustedForwarderAddress,
         uint8 rootDepth,
@@ -24,7 +24,7 @@ contract RootOfTrust is RootOfTrustBase, IdentityChecker, IRootOfTrust {
             revokeMode,
             rootMaintainer
         )
-        IdentityChecker(didRegistry, delegateType)
+        IdentityHandler(didRegistry, delegateType, "ChainOfTrust")
     {}
 
     function addOrUpdateGroupMemberByDelegate(
