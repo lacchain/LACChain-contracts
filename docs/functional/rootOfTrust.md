@@ -51,4 +51,6 @@ Root of Trust smart contract is architecturally composed by the follings:
 
 ## Didactic Diagram
 
-<img src="../img/RoT.png" width="800">
+In the following diagram depth=3 is exemplified
+
+<img src="../img/RoT.png" width="900">
