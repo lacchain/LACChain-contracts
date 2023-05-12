@@ -2,11 +2,11 @@
 pragma solidity 0.8.18;
 
 import "../Common/BaseRelayRecipient.sol";
-import "./IRootOfTrustBase.sol";
+import "./IChainOfTrustBase.sol";
 
 import "../utils/Ownable.sol";
 
-contract RootOfTrustBase is Ownable, IRootOfTrustBase {
+contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
     uint256 public memberCounter;
     // entityManager => (gId, didAddress)
     mapping(address => groupDetail) public group;
@@ -26,13 +26,13 @@ contract RootOfTrustBase is Ownable, IRootOfTrustBase {
 
     constructor(
         address trustedForwarderAddress,
-        uint8 rootDepth,
+        uint8 chainDepth,
         string memory did,
         address rootEntityManager,
         uint8 revokeMode,
         bool rootMaintainer
     ) BaseRelayRecipient(trustedForwarderAddress) {
-        depth = rootDepth;
+        depth = chainDepth;
         memberCounter++;
         revokeConfigMode = revokeMode;
         _configMember(memberCounter, did, rootEntityManager);
@@ -42,15 +42,15 @@ contract RootOfTrustBase is Ownable, IRootOfTrustBase {
     uint256 prevBlock;
 
     function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
-        isRootMaintainer = rootMaintainer;
         require(isRootMaintainer != rootMaintainer, "ISC");
+        isRootMaintainer = rootMaintainer;
         emit MaintainerModeChanged(isRootMaintainer, prevBlock);
     }
 
-    function updateDepth(uint8 rootDepth) external {
+    function updateDepth(uint8 chainDepth) external {
         _validateMaintainer();
         uint8 prevDepth = depth;
-        depth = rootDepth;
+        depth = chainDepth;
         emit DepthChanged(prevDepth, depth, prevBlock);
         prevBlock = block.number;
     }
@@ -83,7 +83,7 @@ contract RootOfTrustBase is Ownable, IRootOfTrustBase {
         manager[gId] = entityManager;
         address didAddr = _computeAddress(did);
         gd.didAddress = didAddr;
-        emit MemberConfigChanged(entityManager, did, prevBlock);
+        emit DidChanged(entityManager, did, prevBlock);
         prevBlock = block.number;
     }
 
