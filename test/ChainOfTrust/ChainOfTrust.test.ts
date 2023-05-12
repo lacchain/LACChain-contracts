@@ -5,7 +5,7 @@ import { getAddressFromDid, sleep } from "../util";
 import { deployDidRegistry } from "../Identity/Identity.test";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
-const artifactName = "RootOfTrust";
+const artifactName = "ChainOfTrust";
 describe(artifactName, function () {
   const delegateType = keccak256(toUtf8Bytes("DefaultDelegateType"));
   const [owner, rootManager, member1, member2, member3] = lacchain.getSigners();
@@ -13,7 +13,7 @@ describe(artifactName, function () {
   const did =
     "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C";
 
-  async function deployRootOfTrust(
+  async function deployChainOfTrust(
     depth: number,
     did: string,
     rootManagerAddress: string,
@@ -37,10 +37,10 @@ describe(artifactName, function () {
     return instance.address;
   }
 
-  describe("Root of Trust", () => {
+  describe("Chain of Trust", () => {
     it("Should set right values on artifact deployment", async () => {
       const rootManagerAddress = rootManager.address;
-      const contractAddress = await deployRootOfTrust(
+      const contractAddress = await deployChainOfTrust(
         depth,
         did,
         rootManagerAddress
@@ -79,7 +79,7 @@ describe(artifactName, function () {
       );
 
       const rootManagerAddress = rootManager.address;
-      const contractAddress = await deployRootOfTrust(
+      const contractAddress = await deployChainOfTrust(
         depth,
         did,
         rootManagerAddress
@@ -150,7 +150,7 @@ describe(artifactName, function () {
       );
 
       const rootManagerAddress = rootManager.address;
-      const contractAddress = await deployRootOfTrust(
+      const contractAddress = await deployChainOfTrust(
         depth,
         did,
         rootManagerAddress

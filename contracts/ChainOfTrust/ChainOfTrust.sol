@@ -2,13 +2,13 @@
 pragma solidity 0.8.18;
 
 import "../utils/IdentityHandler.sol";
-import "./RootOfTrustBase.sol";
-import "./IRootOfTrust.sol";
+import "./ChainOfTrustBase.sol";
+import "./IChainOfTrust.sol";
 
-contract RootOfTrust is RootOfTrustBase, IdentityHandler, IRootOfTrust {
+contract ChainOfTrust is ChainOfTrustBase, IdentityHandler, IChainOfTrust {
     constructor(
         address trustedForwarderAddress,
-        uint8 rootDepth,
+        uint8 chainDepth,
         string memory did,
         address rootEntityManager,
         uint8 revokeMode,
@@ -16,9 +16,9 @@ contract RootOfTrust is RootOfTrustBase, IdentityHandler, IRootOfTrust {
         address didRegistry,
         bytes32 delegateType
     )
-        RootOfTrustBase(
+        ChainOfTrustBase(
             trustedForwarderAddress,
-            rootDepth,
+            chainDepth,
             did,
             rootEntityManager,
             revokeMode,

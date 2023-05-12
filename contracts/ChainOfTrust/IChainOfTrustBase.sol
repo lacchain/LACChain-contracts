@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.18;
 
-interface IRootOfTrustBase {
+interface IChainOfTrustBase {
     struct groupDetail {
         uint256 gId;
         address didAddress;
@@ -66,7 +66,7 @@ interface IRootOfTrustBase {
 
     function updateMaintainerMode(bool rootMaintainer) external;
 
-    function updateDepth(uint8 rootDepth) external;
+    function updateDepth(uint8 chainDepth) external;
 
     function updateRevokeMode(uint8 revokeMode) external;
 
