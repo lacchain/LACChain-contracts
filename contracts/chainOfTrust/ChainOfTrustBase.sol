@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../../Common/Upgradeable/BaseRelayRecipientUpgradeable.sol";
-import "../IChainOfTrustBase.sol";
+import "../common/BaseRelayRecipient.sol";
+import "./IChainOfTrustBase.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../utils/Ownable.sol";
 
-contract AbstractChainOfTrustBaseUpgradeable is
-    BaseRelayRecipientUpgradeable,
-    OwnableUpgradeable,
-    IChainOfTrustBase
-{
+contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
     uint256 public memberCounter;
     // entityManager => (gId, didAddress)
     mapping(address => groupDetail) public group;
@@ -21,7 +17,6 @@ contract AbstractChainOfTrustBaseUpgradeable is
     mapping(uint256 => mapping(uint256 => MemberDetail)) public trustedList;
 
     mapping(uint256 => uint256) public trustedBy;
-    uint256 prevBlock;
 
     uint8 public depth;
     uint8 public revokeConfigMode;
@@ -29,35 +24,22 @@ contract AbstractChainOfTrustBaseUpgradeable is
     uint8 public constant ROOTANDPARENT = 1;
     uint8 public constant ALLANCESTORS = 2;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function __AbstractChainOfTrustBaseUpgradeable_init(
+    constructor(
         address trustedForwarderAddress,
         uint8 chainDepth,
         string memory did,
         address rootEntityManager,
         uint8 revokeMode,
         bool rootMaintainer
-    ) internal onlyInitializing {
+    ) BaseRelayRecipient(trustedForwarderAddress) {
         depth = chainDepth;
         memberCounter++;
         revokeConfigMode = revokeMode;
         _configMember(memberCounter, did, rootEntityManager);
         isRootMaintainer = rootMaintainer;
-        __AbstractChainOfTrustBaseUpgradeable_init_unchained(
-            trustedForwarderAddress
-        );
     }
 
-    function __AbstractChainOfTrustBaseUpgradeable_init_unchained(
-        address trustedForwarderAddress
-    ) internal onlyInitializing {
-        __BaseRelayRecipient_init(trustedForwarderAddress);
-        __Ownable_init();
-    }
+    uint256 prevBlock;
 
     function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
         require(isRootMaintainer != rootMaintainer, "ISC");
@@ -325,28 +307,5 @@ contract AbstractChainOfTrustBaseUpgradeable is
         }
 
         require(owner() == _msgSender(), "Ownable: caller is not the owner");
-    }
-
-    /**
-     * return the sender of this call.
-     * if the call came through our Relay Hub, return the original sender.
-     * should be used in the contract anywhere instead of msg.sender
-     */
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
-        returns (address sender)
-    {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
     }
 }

@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.18;
 
-import "./Common/BaseRelayRecipient.sol";
+import "./common/BaseRelayRecipient.sol";
 
 contract Migrations is BaseRelayRecipient {
     address public owner;

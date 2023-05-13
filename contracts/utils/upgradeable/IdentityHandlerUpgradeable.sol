@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../../Common/Upgradeable/BaseRelayRecipientUpgradeable.sol";
+import "../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
 import "../IIdentityHandler.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";

@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../Common/BaseRelayRecipient.sol";
+import "../common/BaseRelayRecipient.sol";
 import "./ICredentialRegistry.sol";
 
 import "../utils/IdentityHandler.sol";
