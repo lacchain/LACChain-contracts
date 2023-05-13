@@ -53,4 +53,4 @@ Chan of Trust smart contract is architecturally composed by the follings:
 
 In the following diagram depth=3 is exemplified
 
-<img src="../img/RoT.png" width="900">
+<img src="../img/CoT.png" width="900">
