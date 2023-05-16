@@ -7,13 +7,13 @@ import { GasModelProvider, GasModelSigner } from "@lacchain/gas-model-provider";
 import { ContractFactory } from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { HttpNetworkUserConfig } from "hardhat/types/config";
+import { GasModelSignerModified } from "./GasModelModified";
 
 extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   hre.lacchain = lazyObject(() => {
     const gasModelProvider = new GasModelProvider(
       (hre.network.config as HttpNetworkUserConfig).url
     );
-
     return {
       provider: gasModelProvider,
       getSigners: () => {
@@ -21,7 +21,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
           .config as HttpNetworkUserConfig;
         return (privateKeys || []).map(
           (privateKey: string) =>
-            new GasModelSigner(
+            new GasModelSignerModified(
               privateKey,
               gasModelProvider,
               nodeAddress,
