@@ -21,3 +21,11 @@ migrations Instance successfully deployed at address: 0xE74B710bCC51fE2B290b8653
  yarn hardhat run --network lacchain scripts/deployChainOfTrustBase.ts # deploys Base Chain Of Trust Smart Contract
  yarn hardhat run --network lacchain scripts/deployChainOfTrust.ts # deploys Chain Of Trust Smart Contract
 ```
+
+## Deploying upgradeable contracts:
+
+```sh
+env DEBUG='@openzeppelin:*' yarn hardhat run --network lacchain scripts/upgradeable/deployExampleUpgradeable.ts # deploys a simple upgradeable contract
+env DEBUG='@openzeppelin:*' yarn hardhat run --network lacchain scripts/upgradeable/deployChainOfTrustBaseUpgradeable.ts # deploys a chain of trust base upgradeable contract
+env DEBUG='@openzeppelin:*' yarn hardhat run --network lacchain scripts/upgradeable/deployChainOfTrustUpgradeable.ts # deploys a chain of trust didRegistry-integrated upgradeable contract
+```

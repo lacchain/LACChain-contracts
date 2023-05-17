@@ -5,6 +5,7 @@ async function main() {
   const artifactName = "ExampleUpgradeable";
   console.log("signing with", accounts[0].address);
   const Artifact = await ethers.getContractFactory(artifactName, accounts[0]);
+  console.log("Using Base Relay Address:", lacchain.baseRelayAddress);
   await upgrades.deployProxy(Artifact, [4, lacchain.baseRelayAddress], {
     kind: "uups",
   });

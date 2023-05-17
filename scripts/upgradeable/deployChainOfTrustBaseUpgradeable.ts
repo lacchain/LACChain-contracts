@@ -3,26 +3,29 @@ import { ethers, lacchain, upgrades } from "hardhat";
 async function main() {
   const accounts = lacchain.getSigners();
   const artifactName = "ChainOfTrustBaseUpgradeable";
-  const Artifact = await ethers.getContractFactory(artifactName, accounts[0]);
+  const deployer = accounts[0];
+  const rootManager = accounts[0];
+  console.log("signing with", deployer.address);
+  const Artifact = await ethers.getContractFactory(artifactName, deployer);
   console.log("Using Base Relay Address:", lacchain.baseRelayAddress);
+  const depth = 3;
   const revokeMode = 0; // only direct parent can revoke
+  const rootDid =
+    "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C";
   const isRootMaintainer = false; // means only contract owner maintains "depth" and "revocation mode"
-  const instance = await upgrades.deployProxy(
+  await upgrades.deployProxy(
     Artifact,
     [
       lacchain.baseRelayAddress,
-      "3", // depth
-      "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C", // root did
-      "0xFFFCe4Cc7033746106986Aca1B8B8572B2f58B08", // root account manager
+      depth,
+      rootDid, // root did
+      rootManager.address, // root account manager
       revokeMode,
       isRootMaintainer,
     ],
     { kind: "uups" }
   );
-  console.log(
-    `${artifactName} instance successfully deployed at address: ` +
-      instance.address
-  );
+  console.log("update addresses ..."); // TODO: address this issue
 }
 
 main().catch((error) => {

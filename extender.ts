@@ -3,7 +3,7 @@ import { extendEnvironment } from "hardhat/config";
 import { lazyObject } from "hardhat/plugins";
 import "./type-extensions";
 
-import { GasModelProvider, GasModelSigner } from "@lacchain/gas-model-provider";
+import { GasModelProvider } from "@lacchain/gas-model-provider";
 import { ContractFactory } from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { HttpNetworkUserConfig } from "hardhat/types/config";
