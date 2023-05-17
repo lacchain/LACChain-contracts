@@ -8,7 +8,7 @@
 
 ## Contracts
 
-- [Chain of Trust](docs/functional/rootOfTrust.md)
+- [Chain of Trust](docs/functional/chainOfTrust.md)
 - [Did Registry](docs/functional/didRegistry.md)
 
 ## License

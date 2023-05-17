@@ -17,9 +17,9 @@ Did-Registry stack of contracts are based on [Lacchain did registry](https://git
 
 ## Smart contracts
 
-- [DidRegistry](../../contracts/Identity/DIDRegistry.sol)
-- [DidRegistry Recoverable](../../contracts/Identity/DidRegistryRecoverable.sol)
+- [DidRegistry](../../contracts/identity/DIDRegistry.sol)
+- [DidRegistry Recoverable](../../contracts/identity/DIDRegistryRecoverable.sol)
 
 ## Smart contracts Methods and Emmitted events
 
-- [Did Registry](../../contracts/Identity/IDIDRegistry.sol)
+- [Did Registry](../../contracts/identity/IDIDRegistry.sol)
