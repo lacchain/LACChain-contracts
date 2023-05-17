@@ -15,7 +15,7 @@ contract ExampleUpgradeable is
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        //_disableInitializers();
+        _disableInitializers();
     }
 
     uint256 public x;
