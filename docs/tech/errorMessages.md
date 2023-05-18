@@ -13,7 +13,7 @@
 - IOHCS -> Invalid OnHold Change Status
 - RNIBE -> Registry not issued by entity
 
-## Root Of Trust
+## Chain Of Trust
 
 - DOOT -> Depth out of trust
 - MAA -> Member Already Added

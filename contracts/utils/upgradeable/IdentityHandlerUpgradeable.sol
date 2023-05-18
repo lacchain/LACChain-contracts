@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../common/BaseRelayRecipient.sol";
-import "./IIdentityHandler.sol";
-import "./EIP712/EIP712.sol";
+import "../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
+import "../IIdentityHandler.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 
-abstract contract IdentityHandler is
-    IIdentityHandler,
-    BaseRelayRecipient,
-    EIP712
+abstract contract IdentityHandlerUpgradeable is
+    Initializable,
+    ContextUpgradeable,
+    EIP712Upgradeable,
+    IIdentityHandler
 {
     bytes32 public defaultDelegateType;
     address public defaultDidRegistry;
@@ -16,14 +19,22 @@ abstract contract IdentityHandler is
     // identity => delegateType => bool
     mapping(address => mapping(bytes32 => bool)) public didDelegateTypes;
 
-    constructor(
+    function __IdentityHandler_init(
         address didRegistry,
         bytes32 delegateType,
         string memory name
-    ) EIP712(name, "1") {
+    ) internal onlyInitializing {
         // version is expected to be updated if new version is released
         defaultDidRegistry = didRegistry;
         defaultDelegateType = delegateType;
+        __IdentityHandler_init_unchained(name, "1");
+    }
+
+    function __IdentityHandler_init_unchained(
+        string memory name,
+        string memory version
+    ) internal onlyInitializing {
+        __EIP712_init(name, version);
     }
 
     function _getDefaultDidRegistry() internal view returns (address) {

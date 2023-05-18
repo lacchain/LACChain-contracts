@@ -2,6 +2,7 @@ import "hardhat/types/runtime";
 import "hardhat/types/config";
 import { Contract, ContractFactory } from "ethers";
 import { GasModelProvider, GasModelSigner } from "@lacchain/gas-model-provider";
+import { GasModelSignerModified } from "./GasModelModified";
 
 declare module "hardhat/types/config" {
   interface HttpNetworkUserConfig {
@@ -30,7 +31,7 @@ declare module "hardhat/types/runtime" {
         contract: ContractFactory,
         ...params: any
       ) => Promise<Contract>;
-      getSigners: () => GasModelSigner[];
+      getSigners: () => GasModelSignerModified[];
     };
   }
 }

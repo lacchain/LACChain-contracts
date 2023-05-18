@@ -1,4 +1,4 @@
-# Root Of Trust
+# Chain Of Trust
 
 Chain of Trust smart contract is part of a stack of contracts that comprise Chain of Trust, a term coined with the concept of trust that provides entities the ability to verify whether another entity is trusted.
 
@@ -46,11 +46,11 @@ Chan of Trust smart contract is architecturally composed by the follings:
 
 ## Smart contracts Methods and Emmitted events
 
-- [Chain of Trust Base contract](../../contracts/ChainOfTrust/IChainOfTrustBase.sol)
-- [Chain of Trust](../../contracts/ChainOfTrust/IChainOfTrust.sol)
+- [Chain of Trust Base contract](../../contracts/chainOfTrust/IChainOfTrustBase.sol)
+- [Chain of Trust](../../contracts/chainOfTrust/IChainOfTrust.sol)
 
 ## Didactic Diagram
 
 In the following diagram depth=3 is exemplified
 
-<img src="../img/RoT.png" width="900">
+<img src="../img/CoT.png" width="900">

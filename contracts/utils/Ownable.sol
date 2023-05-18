@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.18;
 
-import "../Common/BaseRelayRecipient.sol";
+import "../common/BaseRelayRecipient.sol";
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
