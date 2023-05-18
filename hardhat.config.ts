@@ -1,4 +1,5 @@
 import { HardhatUserConfig, extendEnvironment } from "hardhat/config";
+import "@openzeppelin/hardhat-upgrades";
 import "@nomicfoundation/hardhat-toolbox";
 import "./extender";
 import "hardhat-contract-sizer";
