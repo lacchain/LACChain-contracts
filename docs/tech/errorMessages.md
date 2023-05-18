@@ -1,5 +1,10 @@
 # Smart Contracts Error Messages
 
+## Common Error Messages
+
+- MAA -> Member Already Added
+- IET -> Invalid Expiration Time
+
 ## Credential Registry
 
 - ER -> Expired Registry
@@ -16,7 +21,6 @@
 ## Chain Of Trust
 
 - DOOT -> Depth out of trust
-- MAA -> Member Already Added
 - NA -> Not Authorized
 - MDEIYR -> Member does not exist in your registry
 - DDM -> Did does not match
@@ -31,6 +35,10 @@
 
 - TLAO -> Trusted List Already Onboarded
 - TLAA -> Trusted List Already Added
-- IET -> Invalid Expiration Time
 - IP -> Invalid Period
 - DDMODE -> Did Does Not Match or Does Not Exist
+
+## Public Directory
+
+- DNR -> Did not Registered
+- DAE -> Did Already Exists
