@@ -23,6 +23,10 @@ interface ICredentialRegistry {
         bool onHoldStatus
     ) external;
 
+    /**
+     * @dev Returns details about an issued digest.
+     * @notice See "Detail" struct on this documentation.
+     */
     function getDetails(
         address issuer,
         bytes32 digest
@@ -169,7 +173,7 @@ interface ICredentialRegistry {
      scenario 2: (iat > 0 && exp == 0) || (exp > current time) , means the data is still valid 
      scenario 3: exp < current time && exp !=0, means the data has expired (invalid)
      additionally:
-     scenario 3.1: iat = 0 && scenario 3: means a data was never issued but revoked (invalid)
+     scenario 3.1: iat == 0 && scenario 3: means a data was never issued but revoked (invalid)
      */
     struct Detail {
         uint256 iat;
