@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers, lacchain } from "hardhat";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import { getAddressFromDid, sleep } from "../util";
-import { deployDidRegistry } from "../Identity/Identity.test";
+import { deployDidRegistry } from "../identity/Identity.test";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 const artifactName = "ChainOfTrust";

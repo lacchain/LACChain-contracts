@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.18;
 
-interface ICredentialRegistry {
+interface IVerificationRegistry {
     /**
      * Once revoked it will not longer be valid
      */

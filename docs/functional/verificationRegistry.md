@@ -30,8 +30,8 @@ Verification Registry Smart contract is an optimized implentation focused on con
 
 ## Smart contracts
 
-- [Verification Registry](../../contracts/credentials/CredentialRegistry.sol)
+- [Verification Registry](../../contracts/credentials/VerificationRegistry.sol)
 
 ## Smart contracts Methods and Emmitted events
 
-- [Verification Registry Interface](../../contracts/credentials/ICredentialRegistry.sol)
+- [Verification Registry Interface](../../contracts/credentials/IVerificationRegistry.sol)

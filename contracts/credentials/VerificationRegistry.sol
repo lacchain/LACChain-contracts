@@ -2,12 +2,12 @@
 pragma solidity 0.8.18;
 
 import "../common/BaseRelayRecipient.sol";
-import "./ICredentialRegistry.sol";
+import "./IVerificationRegistry.sol";
 
 import "../utils/IdentityHandler.sol";
 
-contract CredentialRegistry is
-    ICredentialRegistry,
+contract VerificationRegistry is
+    IVerificationRegistry,
     BaseRelayRecipient,
     IdentityHandler
 {
