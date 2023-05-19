@@ -26,6 +26,7 @@ Verification Registry Smart contract is an optimized implentation focused on con
 - Any digest will use keccak256 hashing algorithm since this is the default algorithm used for hashing in Ethereum.
 - When issuing a digest it is also important to consider the need of sending many operations at the same time. This contract implements uses EIP712 to encapsulate the sender in such a way that the concept of "msg.sender" is decoupled from the "entity" performing an operation in this contract. The benefit of doing this is that an entity can kind of "send" many transactions in the same block.
   - This feature was implemented for the most demanding methods which are "issue" and "delegate".
+- On contract deplyment it is required to pass the defaultDelegateType; this variable represents a bytes32 representation of a delegate type according to ERC1056. Additionally, any entity desiring to use a custom delegate type other than defaultDelegateType can do it by setting that custom delegate type which will be valid only for that entity but not valid for any other member.
 
 ## Smart contracts
 
