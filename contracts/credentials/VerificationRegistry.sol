@@ -33,7 +33,7 @@ contract VerificationRegistry is
 
     function _issue(address by, bytes32 digest, uint256 exp) private {
         Detail memory detail = registers[digest][by];
-        require(detail.iat == 0 && detail.exp != 0, "RAE");
+        require(detail.iat == 0 && detail.exp == 0, "RAE");
         uint256 iat = block.timestamp;
         detail.iat = iat;
         if (exp > 0) {
@@ -122,6 +122,7 @@ contract VerificationRegistry is
     ) external {
         // resolve didRegistry to call
         address registryAddress = getDidRegistry(identity);
+
         _validateDelegate(
             registryAddress,
             identity,

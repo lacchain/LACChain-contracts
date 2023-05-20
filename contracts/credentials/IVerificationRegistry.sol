@@ -158,6 +158,12 @@ interface IVerificationRegistry {
         uint exp
     );
 
+    /**
+     * @dev OnHoldChange is a toggle that indicates the status of some data represented by a "digest". If "isOnHold" is true it indicates that the data is
+     * in observation, so meanwhile that data should be taken into temporal status.
+     * If onHold is false it means a digest that was on observation finally ended that period. Now, the validity of that issue relative to the issuer "by" is
+     * up to offchain verification custom logic and whether the credential has not expired or revoked in this contract.
+     */
     event NewOnHoldChange(
         bytes32 indexed digest,
         address indexed by,

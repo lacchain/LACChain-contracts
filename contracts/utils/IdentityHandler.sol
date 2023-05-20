@@ -61,9 +61,7 @@ abstract contract IdentityHandler is
         return delegate;
     }
 
-    function getDidRegistry(
-        address identity
-    ) public view returns (address didRegistryAddress) {
+    function getDidRegistry(address identity) public view returns (address) {
         address registryAddress = didRegistries[identity];
         if (registryAddress == address(0)) {
             return defaultDidRegistry;
@@ -79,6 +77,7 @@ abstract contract IdentityHandler is
             "IP"
         );
         didRegistries[_msgSender()] = didRegistryAddress;
+        emit DidRegistryChange(_msgSender(), didRegistryAddress, true);
     }
 
     function removeDidRegistry() external {
@@ -96,7 +95,7 @@ abstract contract IdentityHandler is
         // call didRegistry by passing the sender and the identity
         (bool success, bytes memory data) = didRegistry.staticcall(
             abi.encodeWithSignature(
-                "validDelegate(address,bytes32,address",
+                "validDelegate(address,bytes32,address)",
                 identity,
                 delegateType,
                 delegate
