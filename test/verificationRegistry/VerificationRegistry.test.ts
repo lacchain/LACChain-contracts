@@ -1,9 +1,11 @@
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
-import { ethers, lacchain } from "hardhat";
+import { ethers, lacchain, network } from "hardhat";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
 import { DIDRegistry } from "../../typechain-types";
 import { Wallet } from "ethers";
+import { defaultAbiCoder } from "ethers/lib/utils";
+import { arrayify } from "@ethersproject/bytes";
 
 const artifactName = "VerificationRegistry";
 const [deployer, entity1, entity2] = lacchain.getSigners();
@@ -239,6 +241,10 @@ describe(artifactName, function () {
         delegate
       );
     });
+    it("Should issue by signed way", async () => {
+      const organization = entity1;
+      issueSigned(organization);
+    });
   });
 });
 
@@ -446,4 +452,72 @@ async function revokeByDelegateWithCustomType(
   expect(q.exp).to.be.lessThan(t);
 }
 
-// getDetails && isValidCredential
+async function issueSigned(
+  organization: Wallet,
+  contractName = "VerificationRegistry",
+  message = "some message",
+  delta = 3600 * 24 * 365,
+  chainId = network.config.chainId,
+  anySender = entity2
+) {
+  const ISSUE_TYPEHASH = keccak256(
+    toUtf8Bytes("Issue(bytes32 digest, uint256 exp, address identity)")
+  ); // OK -> 0xaaf414ba23a8cfcf004a7f75188441e59666f98d85447b5665cf04052d8e2bc3
+
+  // 0. Build digest
+  const digest = keccak256(toUtf8Bytes(message));
+
+  // 1. Build struct data hash
+  const exp = Math.floor(Date.now() / 1000) + delta;
+  const encodedMessage = defaultAbiCoder.encode(
+    ["bytes32", "bytes32", "uint256", "address"],
+    [ISSUE_TYPEHASH, digest, exp, organization.address]
+  );
+  const structHash = keccak256(arrayify(encodedMessage)); // OK
+
+  // 2. EIP712
+  // 2.1 build domainSeparator
+  const TYPE_HASH = keccak256(
+    toUtf8Bytes(
+      "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+    )
+  );
+  const _hashedName = keccak256(toUtf8Bytes(contractName));
+  const _hashedVersion = keccak256(toUtf8Bytes("1"));
+
+  const contractAddress = verificationRegistryAddress;
+  const eds = defaultAbiCoder.encode(
+    ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+    [TYPE_HASH, _hashedName, _hashedVersion, chainId, contractAddress]
+  );
+  const domainSeparator = keccak256(eds); // OK
+
+  // 2.2 Build type data hash
+  // Inputs: structHash and domainSeparator
+  const typeData = ethers.utils.solidityPack(
+    ["bytes1", "bytes1", "bytes32", "bytes32"],
+    [0x19, 0x01, domainSeparator, structHash]
+  );
+  const typeDataHash = keccak256(typeData);
+  // // sign type data hash
+  const signingKey = organization._signingKey;
+  const { v, r, s } = signingKey().signDigest(typeDataHash);
+
+  // 3. Send Signed Transaction
+  const Artifact = await ethers.getContractFactory(artifactName, anySender);
+  const contractInstance = Artifact.attach(verificationRegistryAddress);
+  const result = await contractInstance.issueSigned(
+    digest,
+    exp,
+    organization.address,
+    v,
+    r,
+    s
+  );
+  expect(result)
+    .to.emit(contractInstance, "NewIssuance")
+    .withArgs(digest, organization.address, anyValue, exp);
+  const q = await contractInstance.getDetails(organization.address, digest);
+  expect(q.exp).to.equal(exp);
+  expect(q.onHold).to.equal(false);
+}

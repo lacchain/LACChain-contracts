@@ -17,7 +17,7 @@ contract VerificationRegistry is
         bytes32 delegateType
     )
         BaseRelayRecipient(trustedForwarderAddress)
-        IdentityHandler(didRegistry, delegateType, "CredentialRegistry")
+        IdentityHandler(didRegistry, delegateType, "VerificationRegistry")
     {}
 
     mapping(bytes32 => mapping(address => Detail)) private registers;
