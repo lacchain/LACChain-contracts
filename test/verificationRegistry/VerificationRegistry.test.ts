@@ -1,0 +1,449 @@
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { expect } from "chai";
+import { ethers, lacchain } from "hardhat";
+import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
+import { DIDRegistry } from "../../typechain-types";
+import { Wallet } from "ethers";
+
+const artifactName = "VerificationRegistry";
+const [deployer, entity1, entity2] = lacchain.getSigners();
+let verificationRegistryAddress: string;
+let defaultDidRegistryInstance: DIDRegistry;
+const genericMessage = "some message";
+const didRegistryArtifactName = "DIDRegistry";
+const defaultDelegateType =
+  "0x0be0ff6b6d81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f4";
+describe(artifactName, function () {
+  async function deployDidRegistry(
+    keyRotationTime = 3600
+  ): Promise<DIDRegistry> {
+    const Artifact = await ethers.getContractFactory(
+      didRegistryArtifactName,
+      deployer
+    );
+    const instance = await lacchain.deployContract(
+      Artifact,
+      keyRotationTime,
+      lacchain.baseRelayAddress
+    );
+    return Artifact.attach(instance.address);
+  }
+
+  async function deployVerificationRegistry(
+    _defaultDelegateType = defaultDelegateType
+  ) {
+    defaultDidRegistryInstance = await deployDidRegistry();
+    const Artifact = await ethers.getContractFactory(artifactName, deployer);
+    const instance = await lacchain.deployContract(
+      Artifact,
+      lacchain.baseRelayAddress,
+      defaultDidRegistryInstance.address,
+      _defaultDelegateType
+    );
+
+    verificationRegistryAddress = instance.address;
+  }
+
+  this.beforeEach(async function () {
+    await deployVerificationRegistry();
+  });
+
+  describe("Verification Registry", () => {
+    it("Should setright values on contract deployment", async function () {
+      const Artifact = await ethers.getContractFactory(artifactName, entity1);
+      const ci = Artifact.attach(verificationRegistryAddress);
+      expect(await ci.defaultDelegateType()).to.equal(defaultDelegateType);
+      expect(await ci.defaultDidRegistry()).to.equal(
+        defaultDidRegistryInstance.address
+      );
+    });
+    it("Should set right values on artifact deployment", async () => {
+      await issue(verificationRegistryAddress);
+    });
+    it("Should throw on setting an invalid expiration time", async () => {
+      const message = "some message digest";
+      const digest = keccak256(toUtf8Bytes(message));
+      const delta = -3600 * 24 * 365;
+      const exp = Math.floor(Date.now() / 1000) + delta;
+      const Artifact = await ethers.getContractFactory(artifactName, entity1);
+      const verificationRegistry = Artifact.attach(verificationRegistryAddress);
+      const result = await verificationRegistry.issue(
+        digest,
+        exp,
+        entity1.address
+      );
+      expect(result).not.to.emit(verificationRegistry, "NewIssuance");
+    });
+    it("Should throw on issuing an already issued digest by the same entity", async () => {
+      const message = "some message digest";
+      const digest = keccak256(toUtf8Bytes(message));
+      const delta = 3600 * 24 * 365;
+      const exp = Math.floor(Date.now() / 1000) + delta;
+      const Artifact = await ethers.getContractFactory(artifactName, entity1);
+      const verificationRegistry = Artifact.attach(verificationRegistryAddress);
+      await verificationRegistry.issue(digest, exp, entity1.address);
+      try {
+        await verificationRegistry.issue(
+          digest,
+          exp,
+          entity1.address // assuming entity2.address is the main entity
+        );
+        throw new Error("Workaround ..."); // should never reach here since it is expected that issue operation will fail.
+      } catch (error) {}
+    });
+    it("Shoud throw on attempting to send a transaction with an unauthorized controller", async () => {
+      const message = "some message digest";
+      const digest = keccak256(toUtf8Bytes(message));
+      const delta = 3600 * 24 * 365;
+      const exp = Math.floor(Date.now() / 1000) + delta;
+      const Artifact = await ethers.getContractFactory(artifactName, entity1); // entity1 is the address of the sender account
+      const verificationRegistry = Artifact.attach(verificationRegistryAddress);
+      try {
+        await verificationRegistry.issue(
+          digest,
+          exp,
+          entity2.address // assuming entity2.address is the main entity
+        );
+        throw new Error("Workaround ..."); // should never reach here since it is expected that issue operation will fail.
+      } catch (error) {}
+    });
+    it("Should return expected values on revoking a previously issued digest", async () => {
+      const message = "some message";
+      await issue(
+        verificationRegistryAddress,
+        "some message",
+        3600 * 24 * 365,
+        entity1
+      );
+      await revoke(verificationRegistryAddress, message, entity1);
+    });
+    it("Should set onHold to true on setting a digest in onHold", async () => {
+      await issue();
+      await toggletOnHold(true);
+    });
+    it("Should pass on performing onHold on a non issued digest", async () => {
+      await toggletOnHold(true);
+    });
+    it("Should transition from true to false when calling Onhold", async () => {
+      await toggletOnHold(true);
+      await toggletOnHold(false);
+    });
+    it("Should issue by delegate", async () => {
+      const organization = entity1;
+      const delegate = entity2;
+      await authorizeDelegate(delegate.address, organization);
+      await issueByDelegate(
+        verificationRegistryAddress,
+        "some message",
+        3600 * 24 * 365,
+        organization,
+        delegate
+      );
+    });
+    it("Should throw on issuing with an unauthorized delegate", async () => {
+      try {
+        await issueByDelegate(); // will fail since delegate authorization was not set in advance
+        throw new Error("Workaround ..."); // should never reach here since it is expected that issue operation will fail.
+      } catch (error) {}
+    });
+    it("Should issue by delegate with custom type", async () => {
+      const customDelegateType =
+        "0x0be0ff6adc81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f5";
+      const organization = entity1;
+      const delegate = entity2;
+      await setCustomDelegateType(organization, customDelegateType);
+      await authorizeDelegate(
+        delegate.address,
+        organization,
+        defaultDidRegistryInstance.address,
+        customDelegateType
+      );
+      await issueByDelegateWithCustomType(
+        customDelegateType,
+        verificationRegistryAddress,
+        "some message",
+        3600 * 24 * 365,
+        organization,
+        delegate
+      );
+    });
+    it("Should issue by delegate with custom delegate type and custom didRegistry", async () => {
+      const customDidRegistry = await deployDidRegistry(3600);
+      const organization = entity1;
+      await addCustomDidRegistry(customDidRegistry.address, organization);
+      const customDelegateType =
+        "0x0be0ff6adc81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f5";
+      const delegate = entity2;
+      await setCustomDelegateType(organization, customDelegateType);
+      await authorizeDelegate(
+        delegate.address,
+        organization,
+        customDidRegistry.address,
+        customDelegateType
+      );
+      await issueByDelegateWithCustomType(
+        customDelegateType,
+        verificationRegistryAddress,
+        "some message",
+        3600 * 24 * 365,
+        organization,
+        delegate
+      );
+    });
+    it("Should throw on issuing with an invalid custom type", async () => {
+      const organization = entity1;
+      const customDelegateType =
+        "0x0be0ff6adc81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f5";
+      const delegate = entity2;
+      await authorizeDelegate(delegate.address, organization); // authorizing delegate with the default delegate type
+      try {
+        await issueByDelegateWithCustomType(
+          customDelegateType,
+          verificationRegistryAddress,
+          "some message",
+          3600 * 24 * 365,
+          organization,
+          delegate
+        );
+        throw new Error("Workaround ..."); // should never reach here since it is expected that issue operation will fail.
+      } catch (error) {}
+    });
+    it("Should revoke by delegate", async () => {
+      const organization = entity1;
+      const delegate = entity2;
+      await authorizeDelegate(delegate.address, organization);
+      await revokeByDelegate(
+        verificationRegistryAddress,
+        "some message",
+        organization,
+        delegate
+      );
+    });
+    it("Should revoke by delegate with custom type", async () => {
+      const customDelegateType =
+        "0x0be0ff6adc81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f5";
+      const organization = entity1;
+      const delegate = entity2;
+      await setCustomDelegateType(organization, customDelegateType);
+      await authorizeDelegate(
+        delegate.address,
+        organization,
+        defaultDidRegistryInstance.address,
+        customDelegateType
+      );
+      await revokeByDelegateWithCustomType(
+        customDelegateType,
+        verificationRegistryAddress,
+        "some message",
+        organization,
+        delegate
+      );
+    });
+  });
+});
+
+async function issue(
+  _verificationRegistryAddress = verificationRegistryAddress,
+  message = genericMessage,
+  delta = 3600 * 24 * 365,
+  sender = entity1
+) {
+  const digest = keccak256(toUtf8Bytes(message));
+  const exp = Math.floor(Date.now() / 1000) + delta;
+  const Artifact = await ethers.getContractFactory(artifactName, sender);
+  const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
+  const result = await verificationRegistry.issue(digest, exp, sender.address);
+  expect(result)
+    .to.emit(verificationRegistry, "NewIssuance")
+    .withArgs(digest, sender.address, anyValue, exp);
+  const q = await verificationRegistry.getDetails(sender.address, digest);
+  expect(q.exp).to.equal(exp);
+  expect(q.onHold).to.equal(false);
+}
+
+async function revoke(
+  _verificationRegistryAddress = verificationRegistryAddress,
+  message = genericMessage,
+  sender = entity1
+) {
+  const digest = keccak256(toUtf8Bytes(message));
+  const Artifact = await ethers.getContractFactory(artifactName, sender);
+  const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
+  const result = await verificationRegistry.revoke(digest, sender.address);
+  expect(result)
+    .to.emit(verificationRegistry, "NewRevocation")
+    .withArgs(digest, sender.address, anyValue, anyValue);
+  const q = await verificationRegistry.getDetails(sender.address, digest);
+  const t = Math.floor(Date.now() / 1000);
+  expect(q.exp).to.be.lessThan(t);
+}
+
+async function toggletOnHold(
+  expected: boolean,
+  _verificationRegistryAddress = verificationRegistryAddress,
+  message = genericMessage,
+  sender = entity1
+) {
+  const digest = keccak256(toUtf8Bytes(message));
+  const Artifact = await ethers.getContractFactory(artifactName, sender);
+  const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
+  const result = await verificationRegistry.onHoldChange(
+    digest,
+    sender.address,
+    expected
+  );
+  expect(result)
+    .to.emit(verificationRegistry, "NewOnHoldChange")
+    .withArgs(digest, sender.address, expected, anyValue);
+  const q = await verificationRegistry.getDetails(sender.address, digest);
+  expect(q.onHold).to.equal(expected);
+}
+
+async function issueByDelegate(
+  _verificationRegistryAddress = verificationRegistryAddress,
+  message = genericMessage,
+  delta = 3600 * 24 * 365,
+  organization = entity1,
+  delegate = entity2
+) {
+  const digest = keccak256(toUtf8Bytes(message));
+  const exp = Math.floor(Date.now() / 1000) + delta;
+  const Artifact = await ethers.getContractFactory(artifactName, delegate);
+  const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
+  const result = await verificationRegistry.issueByDelegate(
+    organization.address,
+    digest,
+    exp
+  );
+  expect(result)
+    .to.emit(verificationRegistry, "NewIssuance")
+    .withArgs(digest, organization.address, anyValue, exp);
+  const q = await verificationRegistry.getDetails(organization.address, digest);
+  expect(q.exp).to.equal(exp);
+  expect(q.onHold).to.equal(false);
+}
+
+async function issueByDelegateWithCustomType(
+  customDelegateType: string,
+  _verificationRegistryAddress = verificationRegistryAddress,
+  message = genericMessage,
+  delta = 3600 * 24 * 365,
+  organization = entity1,
+  delegate = entity2
+) {
+  const digest = keccak256(toUtf8Bytes(message));
+  const exp = Math.floor(Date.now() / 1000) + delta;
+  const Artifact = await ethers.getContractFactory(artifactName, delegate);
+  const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
+  const result = await verificationRegistry.issueByDelegateWithCustomType(
+    customDelegateType,
+    organization.address,
+    digest,
+    exp
+  );
+  expect(result)
+    .to.emit(verificationRegistry, "NewIssuance")
+    .withArgs(digest, organization.address, anyValue, exp);
+  const q = await verificationRegistry.getDetails(organization.address, digest);
+  expect(q.exp).to.equal(exp);
+  expect(q.onHold).to.equal(false);
+}
+
+async function authorizeDelegate(
+  delegateAddress: string,
+  organization: Wallet,
+  didRegistryAddress = defaultDidRegistryInstance.address,
+  delegateType = defaultDelegateType
+) {
+  const Artifact = await ethers.getContractFactory(
+    didRegistryArtifactName,
+    organization
+  );
+  const didRegistryOrg = Artifact.attach(didRegistryAddress);
+  await didRegistryOrg.addDelegate(
+    organization.address,
+    delegateType,
+    delegateAddress,
+    3600 * 24 * 365
+  );
+
+  const d = await didRegistryOrg.validDelegate(
+    organization.address,
+    delegateType,
+    delegateAddress
+  );
+  expect(d).to.equal(true);
+}
+
+async function setCustomDelegateType(
+  organization: Wallet,
+  customDelegateType: string
+) {
+  const Artifact = await ethers.getContractFactory(artifactName, organization);
+  const ci = Artifact.attach(verificationRegistryAddress);
+  const result = await ci.addDelegateType(customDelegateType);
+  expect(result)
+    .to.emit(ci, "NewDelegateTypeChange")
+    .withArgs(customDelegateType, organization.address, true);
+}
+
+async function addCustomDidRegistry(
+  customDidRegistryAddress: string,
+  organization: Wallet,
+  _verificationRegistryAddress = verificationRegistryAddress
+) {
+  const Artifact = await ethers.getContractFactory(artifactName, organization);
+  const verificationRegistryOrg = Artifact.attach(_verificationRegistryAddress);
+  const result = await verificationRegistryOrg.addDidRegistry(
+    customDidRegistryAddress
+  );
+  expect(result)
+    .to.emit(verificationRegistryOrg, "DidRegistryChange")
+    .withArgs(organization.address, customDidRegistryAddress, true);
+}
+
+async function revokeByDelegate(
+  _verificationRegistryAddress = verificationRegistryAddress,
+  message = genericMessage,
+  organization = entity1,
+  delegate = entity2
+) {
+  const digest = keccak256(toUtf8Bytes(message));
+  const Artifact = await ethers.getContractFactory(artifactName, delegate);
+  const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
+  const result = await verificationRegistry.revokeByDelegate(
+    organization.address,
+    digest
+  );
+  expect(result)
+    .to.emit(verificationRegistry, "NewRevocation")
+    .withArgs(digest, organization.address, anyValue, anyValue);
+  const q = await verificationRegistry.getDetails(organization.address, digest);
+  const t = Math.floor(Date.now() / 1000);
+  expect(q.exp).to.be.lessThan(t);
+}
+
+async function revokeByDelegateWithCustomType(
+  customDelegateType: string,
+  _verificationRegistryAddress = verificationRegistryAddress,
+  message = genericMessage,
+  organization = entity1,
+  delegate = entity2
+) {
+  const digest = keccak256(toUtf8Bytes(message));
+  const Artifact = await ethers.getContractFactory(artifactName, delegate);
+  const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
+  const result = await verificationRegistry.revokeByDelegateWithCustomType(
+    customDelegateType,
+    organization.address,
+    digest
+  );
+  expect(result)
+    .to.emit(verificationRegistry, "NewRevocation")
+    .withArgs(digest, organization.address, anyValue, anyValue);
+  const q = await verificationRegistry.getDetails(organization.address, digest);
+  const t = Math.floor(Date.now() / 1000);
+  expect(q.exp).to.be.lessThan(t);
+}
+
+// getDetails && isValidCredential
