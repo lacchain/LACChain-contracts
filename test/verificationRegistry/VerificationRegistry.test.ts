@@ -8,13 +8,14 @@ import { defaultAbiCoder } from "ethers/lib/utils";
 import { arrayify } from "@ethersproject/bytes";
 
 const artifactName = "VerificationRegistry";
-const [deployer, entity1, entity2] = lacchain.getSigners();
+const [deployer, entity1, entity2, entity3] = lacchain.getSigners();
 let verificationRegistryAddress: string;
 let defaultDidRegistryInstance: DIDRegistry;
 const genericMessage = "some message";
 const didRegistryArtifactName = "DIDRegistry";
 const defaultDelegateType =
   "0x0be0ff6b6d81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f4";
+const EIP712ContractName = "VerificationRegistry";
 describe(artifactName, function () {
   async function deployDidRegistry(
     keyRotationTime = 3600
@@ -245,6 +246,31 @@ describe(artifactName, function () {
       const organization = entity1;
       issueSigned(organization);
     });
+    it("Should throw on attempting to issue signed with an invalid signature", async () => {
+      const organization = entity1;
+      const { typeDataHash, digest, exp } = await getTypedDataHashForIssue(
+        organization
+      );
+      // // sign type data hash
+      const impersonator = entity2;
+      const signingKey = impersonator._signingKey;
+      const { v, r, s } = signingKey().signDigest(typeDataHash);
+      // 3. Send Signed Transaction
+      const anySender = entity3;
+      const Artifact = await ethers.getContractFactory(artifactName, anySender);
+      const contractInstance = Artifact.attach(verificationRegistryAddress);
+      try {
+        await contractInstance.issueSigned(
+          digest,
+          exp,
+          organization.address,
+          v,
+          r,
+          s
+        );
+        throw new Error("Workaround ..."); // should never reach here since it is expected that issue operation will fail before
+      } catch (error) {}
+    });
   });
 });
 
@@ -454,12 +480,49 @@ async function revokeByDelegateWithCustomType(
 
 async function issueSigned(
   organization: Wallet,
-  contractName = "VerificationRegistry",
+  contractName = EIP712ContractName,
   message = "some message",
   delta = 3600 * 24 * 365,
   chainId = network.config.chainId,
   anySender = entity2
 ) {
+  const { typeDataHash, digest, exp } = await getTypedDataHashForIssue(
+    organization,
+    contractName,
+    message,
+    delta,
+    chainId
+  );
+  // sign type data hash
+  const signingKey = organization._signingKey;
+  const { v, r, s } = signingKey().signDigest(typeDataHash);
+
+  // 3. Send Signed Transaction
+  const Artifact = await ethers.getContractFactory(artifactName, anySender);
+  const contractInstance = Artifact.attach(verificationRegistryAddress);
+  const result = await contractInstance.issueSigned(
+    digest,
+    exp,
+    organization.address,
+    v,
+    r,
+    s
+  );
+  expect(result)
+    .to.emit(contractInstance, "NewIssuance")
+    .withArgs(digest, organization.address, anyValue, exp);
+  const q = await contractInstance.getDetails(organization.address, digest);
+  expect(q.exp).to.equal(exp);
+  expect(q.onHold).to.equal(false);
+}
+
+async function getTypedDataHashForIssue(
+  organization: Wallet,
+  contractName = EIP712ContractName,
+  message = "some message",
+  delta = 3600 * 24 * 365,
+  chainId = network.config.chainId
+): Promise<{ typeDataHash: string; digest: string; exp: number }> {
   const ISSUE_TYPEHASH = keccak256(
     toUtf8Bytes("Issue(bytes32 digest, uint256 exp, address identity)")
   ); // OK -> 0xaaf414ba23a8cfcf004a7f75188441e59666f98d85447b5665cf04052d8e2bc3
@@ -499,25 +562,5 @@ async function issueSigned(
     [0x19, 0x01, domainSeparator, structHash]
   );
   const typeDataHash = keccak256(typeData);
-  // // sign type data hash
-  const signingKey = organization._signingKey;
-  const { v, r, s } = signingKey().signDigest(typeDataHash);
-
-  // 3. Send Signed Transaction
-  const Artifact = await ethers.getContractFactory(artifactName, anySender);
-  const contractInstance = Artifact.attach(verificationRegistryAddress);
-  const result = await contractInstance.issueSigned(
-    digest,
-    exp,
-    organization.address,
-    v,
-    r,
-    s
-  );
-  expect(result)
-    .to.emit(contractInstance, "NewIssuance")
-    .withArgs(digest, organization.address, anyValue, exp);
-  const q = await contractInstance.getDetails(organization.address, digest);
-  expect(q.exp).to.equal(exp);
-  expect(q.onHold).to.equal(false);
+  return { typeDataHash, exp, digest };
 }
