@@ -6,6 +6,7 @@ import { DIDRegistry } from "../../typechain-types";
 import { Wallet } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 import { arrayify } from "@ethersproject/bytes";
+import { sleep } from "../util";
 
 const artifactName = "VerificationRegistry";
 const [deployer, entity1, entity2, entity3] = lacchain.getSigners();
@@ -244,14 +245,14 @@ describe(artifactName, function () {
     });
     it("Should issue by signed way", async () => {
       const organization = entity1;
-      issueSigned(organization);
+      await issueSigned(organization);
     });
     it("Should throw on attempting to issue signed with an invalid signature", async () => {
       const organization = entity1;
       const { typeDataHash, digest, exp } = await getTypedDataHashForIssue(
         organization
       );
-      // // sign type data hash
+      // sign type data hash
       const impersonator = entity2;
       const signingKey = impersonator._signingKey;
       const { v, r, s } = signingKey().signDigest(typeDataHash);
@@ -270,6 +271,10 @@ describe(artifactName, function () {
         );
         throw new Error("Workaround ..."); // should never reach here since it is expected that issue operation will fail before
       } catch (error) {}
+    });
+    it("Should revoke by signed way", async () => {
+      const organization = entity1;
+      await revokeSigned(organization);
     });
   });
 });
@@ -516,6 +521,38 @@ async function issueSigned(
   expect(q.onHold).to.equal(false);
 }
 
+async function revokeSigned(
+  organization: Wallet,
+  contractName = EIP712ContractName,
+  message = "some message",
+  chainId = network.config.chainId,
+  anySender = entity2
+) {
+  const { typeDataHash, digest } = await getTypedDataHashForRevocation(
+    organization,
+    contractName,
+    message,
+    chainId
+  );
+  // sign type data hash
+  const signingKey = organization._signingKey;
+  const { v, r, s } = signingKey().signDigest(typeDataHash);
+
+  // 3. Send Signed Transaction
+  const Artifact = await ethers.getContractFactory(artifactName, anySender);
+  const contractInstance = Artifact.attach(verificationRegistryAddress);
+  const result = await contractInstance.revokeSigned(
+    digest,
+    organization.address,
+    v,
+    r,
+    s
+  );
+  expect(result)
+    .to.emit(contractInstance, "NewRevocation")
+    .withArgs(digest, organization.address, anyValue, anyValue);
+}
+
 async function getTypedDataHashForIssue(
   organization: Wallet,
   contractName = EIP712ContractName,
@@ -563,4 +600,59 @@ async function getTypedDataHashForIssue(
   );
   const typeDataHash = keccak256(typeData);
   return { typeDataHash, exp, digest };
+}
+
+async function getTypedDataHashForRevocation(
+  organization: Wallet,
+  contractName = EIP712ContractName,
+  message = "some message",
+  delta = 3600 * 24 * 365,
+  chainId = network.config.chainId
+): Promise<{ typeDataHash: string; digest: string }> {
+  const ISSUE_TYPEHASH = keccak256(
+    toUtf8Bytes("Revoke(bytes32 digest, address identity)")
+  );
+  // 0. Build digest
+  const digest = keccak256(toUtf8Bytes(message));
+
+  // 1. Build struct data hash
+  const encodedMessage = defaultAbiCoder.encode(
+    ["bytes32", "bytes32", "address"],
+    [ISSUE_TYPEHASH, digest, organization.address]
+  );
+  const structHash = keccak256(arrayify(encodedMessage));
+
+  const domainSeparator = await getDomainSeparator(contractName);
+  // 2.2 Build type data hash
+  // Inputs: structHash and domainSeparator
+  const typeData = ethers.utils.solidityPack(
+    ["bytes1", "bytes1", "bytes32", "bytes32"],
+    [0x19, 0x01, domainSeparator, structHash]
+  );
+  const typeDataHash = keccak256(typeData);
+  return { typeDataHash, digest };
+}
+
+async function getDomainSeparator(
+  contractName: string,
+  version = "1",
+  chainId = network.config.chainId
+): Promise<string> {
+  // 1. EIP712
+  // 1.1 build domainSeparator
+  const TYPE_HASH = keccak256(
+    toUtf8Bytes(
+      "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+    )
+  );
+  const _hashedName = keccak256(toUtf8Bytes(contractName));
+  const _hashedVersion = keccak256(toUtf8Bytes(version));
+
+  const contractAddress = verificationRegistryAddress;
+  const eds = defaultAbiCoder.encode(
+    ["bytes32", "bytes32", "bytes32", "uint256", "address"],
+    [TYPE_HASH, _hashedName, _hashedVersion, chainId, contractAddress]
+  );
+  const domainSeparator = keccak256(eds);
+  return domainSeparator;
 }
