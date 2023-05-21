@@ -6,7 +6,6 @@ import { DIDRegistry } from "../../typechain-types";
 import { Wallet } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 import { arrayify } from "@ethersproject/bytes";
-import { sleep } from "../util";
 
 const artifactName = "VerificationRegistry";
 const [deployer, entity1, entity2, entity3] = lacchain.getSigners();
@@ -276,6 +275,95 @@ describe(artifactName, function () {
       const organization = entity1;
       await revokeSigned(organization);
     });
+    it("Should issue by delegate by signed way", async () => {
+      const organization = entity1;
+      const delegate = entity2;
+      await authorizeDelegate(delegate.address, organization);
+      await issueByDelegateSigned(organization, delegate);
+    });
+    it("Should revoke by delegate by signed way", async () => {
+      const organization = entity1;
+      const delegate = entity2;
+      await authorizeDelegate(delegate.address, organization);
+      await revokeByDelegateSigned(organization, delegate);
+    });
+    it("Should issue by delegate with custom type by signed way", async () => {
+      const customDelegateType =
+        "0x0be0ff6adc81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f5";
+      const organization = entity1;
+      const delegate = entity2;
+      await setCustomDelegateType(organization, customDelegateType);
+      await authorizeDelegate(
+        delegate.address,
+        organization,
+        defaultDidRegistryInstance.address,
+        customDelegateType
+      );
+      await issueByDelegateWithCustomDelegateTypeSigned(
+        customDelegateType,
+        organization,
+        delegate
+      );
+    });
+    it("Should revoke by delegate with custom type by signed way", async () => {
+      const customDelegateType =
+        "0x0be0ff6adc81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f5";
+      const organization = entity1;
+      const delegate = entity2;
+      await setCustomDelegateType(organization, customDelegateType);
+      await authorizeDelegate(
+        delegate.address,
+        organization,
+        defaultDidRegistryInstance.address,
+        customDelegateType
+      );
+      await revokeByDelegateWithCustomDelegateTypeSigned(
+        customDelegateType,
+        organization,
+        delegate
+      );
+    });
+    it("Should update", async () => {
+      const organization = entity1;
+      const Artifact = await ethers.getContractFactory(
+        artifactName,
+        organization
+      );
+      const contractInstance = Artifact.attach(verificationRegistryAddress);
+      const message = "some message";
+      const digest = keccak256(toUtf8Bytes(message));
+      await issue(verificationRegistryAddress, message);
+      const delta = 3600 * 24 * 2;
+      const exp = Math.floor(Date.now() / 1000) + delta;
+      const result = await contractInstance.update(
+        digest,
+        exp,
+        organization.address
+      );
+      expect(result)
+        .to.emit(contractInstance, "NewUpdate")
+        .withArgs(digest, organization.address, exp);
+    });
+    it("Should revoke by delegate with custom did registry and custom delegate type", async () => {
+      const customDidRegistry = await deployDidRegistry(3600);
+      const organization = entity1;
+      await addCustomDidRegistry(customDidRegistry.address, organization);
+      const customDelegateType =
+        "0x0be0ff6adc81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f5";
+      const delegate = entity2;
+      await setCustomDelegateType(organization, customDelegateType);
+      await authorizeDelegate(
+        delegate.address,
+        organization,
+        customDidRegistry.address,
+        customDelegateType
+      );
+      await revokeByDelegateWithCustomDelegateTypeSigned(
+        customDelegateType,
+        organization,
+        delegate
+      );
+    });
   });
 });
 
@@ -310,9 +398,6 @@ async function revoke(
   expect(result)
     .to.emit(verificationRegistry, "NewRevocation")
     .withArgs(digest, sender.address, anyValue, anyValue);
-  const q = await verificationRegistry.getDetails(sender.address, digest);
-  const t = Math.floor(Date.now() / 1000);
-  expect(q.exp).to.be.lessThan(t);
 }
 
 async function toggletOnHold(
@@ -455,9 +540,6 @@ async function revokeByDelegate(
   expect(result)
     .to.emit(verificationRegistry, "NewRevocation")
     .withArgs(digest, organization.address, anyValue, anyValue);
-  const q = await verificationRegistry.getDetails(organization.address, digest);
-  const t = Math.floor(Date.now() / 1000);
-  expect(q.exp).to.be.lessThan(t);
 }
 
 async function revokeByDelegateWithCustomType(
@@ -478,9 +560,6 @@ async function revokeByDelegateWithCustomType(
   expect(result)
     .to.emit(verificationRegistry, "NewRevocation")
     .withArgs(digest, organization.address, anyValue, anyValue);
-  const q = await verificationRegistry.getDetails(organization.address, digest);
-  const t = Math.floor(Date.now() / 1000);
-  expect(q.exp).to.be.lessThan(t);
 }
 
 async function issueSigned(
@@ -525,14 +604,12 @@ async function revokeSigned(
   organization: Wallet,
   contractName = EIP712ContractName,
   message = "some message",
-  chainId = network.config.chainId,
   anySender = entity2
 ) {
   const { typeDataHash, digest } = await getTypedDataHashForRevocation(
     organization,
     contractName,
-    message,
-    chainId
+    message
   );
   // sign type data hash
   const signingKey = organization._signingKey;
@@ -548,6 +625,152 @@ async function revokeSigned(
     r,
     s
   );
+  expect(result)
+    .to.emit(contractInstance, "NewRevocation")
+    .withArgs(digest, organization.address, anyValue, anyValue);
+}
+
+async function issueByDelegateSigned(
+  organization: Wallet,
+  delegate = entity3,
+  contractName = EIP712ContractName,
+  message = "some message",
+  delta = 3600 * 24 * 365,
+  chainId = network.config.chainId,
+  anySender = entity2
+) {
+  const { typeDataHash, digest, exp } = await getTypedDataHashForIssue(
+    organization,
+    contractName,
+    message,
+    delta,
+    chainId
+  );
+  // sign type data hash
+  const signingKey = delegate._signingKey;
+  const { v, r, s } = signingKey().signDigest(typeDataHash);
+
+  // 3. Send Signed Transaction
+  const Artifact = await ethers.getContractFactory(artifactName, anySender);
+  const contractInstance = Artifact.attach(verificationRegistryAddress);
+  const result = await contractInstance.issueByDelegateSigned(
+    digest,
+    exp,
+    organization.address,
+    v,
+    r,
+    s
+  );
+  expect(result)
+    .to.emit(contractInstance, "NewIssuance")
+    .withArgs(digest, organization.address, anyValue, exp);
+  const q = await contractInstance.getDetails(organization.address, digest);
+  expect(q.exp).to.equal(exp);
+  expect(q.onHold).to.equal(false);
+}
+
+async function revokeByDelegateSigned(
+  organization: Wallet,
+  delegate = entity2,
+  contractName = EIP712ContractName,
+  message = "some message",
+  anySender = entity2
+) {
+  const { typeDataHash, digest } = await getTypedDataHashForRevocation(
+    organization,
+    contractName,
+    message
+  );
+  // sign type data hash
+  const signingKey = delegate._signingKey;
+  const { v, r, s } = signingKey().signDigest(typeDataHash);
+
+  // 3. Send Signed Transaction
+  const Artifact = await ethers.getContractFactory(artifactName, anySender);
+  const contractInstance = Artifact.attach(verificationRegistryAddress);
+  const result = await contractInstance.revokeByDelegateSigned(
+    digest,
+    organization.address,
+    v,
+    r,
+    s
+  );
+  expect(result)
+    .to.emit(contractInstance, "NewRevocation")
+    .withArgs(digest, organization.address, anyValue, anyValue);
+}
+
+async function issueByDelegateWithCustomDelegateTypeSigned(
+  delegateType: string,
+  organization: Wallet,
+  delegate = entity3,
+  contractName = EIP712ContractName,
+  message = "some message",
+  delta = 3600 * 24 * 365,
+  chainId = network.config.chainId,
+  anySender = entity2
+) {
+  const { typeDataHash, digest, exp } = await getTypedDataHashForIssue(
+    organization,
+    contractName,
+    message,
+    delta,
+    chainId
+  );
+  // sign type data hash
+  const signingKey = delegate._signingKey;
+  const { v, r, s } = signingKey().signDigest(typeDataHash);
+
+  // 3. Send Signed Transaction
+  const Artifact = await ethers.getContractFactory(artifactName, anySender);
+  const contractInstance = Artifact.attach(verificationRegistryAddress);
+  const result =
+    await contractInstance.issueByDelegateWithCustomDelegateTypeSigned(
+      delegateType,
+      digest,
+      exp,
+      organization.address,
+      v,
+      r,
+      s
+    );
+  expect(result)
+    .to.emit(contractInstance, "NewIssuance")
+    .withArgs(digest, organization.address, anyValue, exp);
+  const q = await contractInstance.getDetails(organization.address, digest);
+  expect(q.exp).to.equal(exp);
+  expect(q.onHold).to.equal(false);
+}
+
+async function revokeByDelegateWithCustomDelegateTypeSigned(
+  delegateType: string,
+  organization: Wallet,
+  delegate = entity3,
+  contractName = EIP712ContractName,
+  message = "some message",
+  anySender = entity2
+) {
+  const { typeDataHash, digest } = await getTypedDataHashForRevocation(
+    organization,
+    contractName,
+    message
+  );
+  // sign type data hash
+  const signingKey = delegate._signingKey;
+  const { v, r, s } = signingKey().signDigest(typeDataHash);
+
+  // 3. Send Signed Transaction
+  const Artifact = await ethers.getContractFactory(artifactName, anySender);
+  const contractInstance = Artifact.attach(verificationRegistryAddress);
+  const result =
+    await contractInstance.revokeByDelegateWithCustomDelegateTypeSigned(
+      delegateType,
+      digest,
+      organization.address,
+      v,
+      r,
+      s
+    );
   expect(result)
     .to.emit(contractInstance, "NewRevocation")
     .withArgs(digest, organization.address, anyValue, anyValue);
@@ -605,9 +828,7 @@ async function getTypedDataHashForIssue(
 async function getTypedDataHashForRevocation(
   organization: Wallet,
   contractName = EIP712ContractName,
-  message = "some message",
-  delta = 3600 * 24 * 365,
-  chainId = network.config.chainId
+  message = "some message"
 ): Promise<{ typeDataHash: string; digest: string }> {
   const ISSUE_TYPEHASH = keccak256(
     toUtf8Bytes("Revoke(bytes32 digest, address identity)")

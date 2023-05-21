@@ -171,9 +171,9 @@ contract VerificationRegistry is
     }
 
     function issueByDelegateSigned(
-        address identity,
         bytes32 digest,
         uint256 exp,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
@@ -190,11 +190,11 @@ contract VerificationRegistry is
         );
     }
 
-    function issueByDelegateWithCustomTypeSigned(
+    function issueByDelegateWithCustomDelegateTypeSigned(
         bytes32 delegateType,
-        address identity,
         bytes32 digest,
         uint256 exp,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
@@ -278,8 +278,8 @@ contract VerificationRegistry is
     }
 
     function revokeByDelegateSigned(
-        address identity,
         bytes32 digest,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
@@ -331,10 +331,10 @@ contract VerificationRegistry is
         _revoke(identity, digest);
     }
 
-    function revokeByDelegateWithCustomTypeSigned(
+    function revokeByDelegateWithCustomDelegateTypeSigned(
         bytes32 delegateType,
-        address identity,
         bytes32 digest,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS

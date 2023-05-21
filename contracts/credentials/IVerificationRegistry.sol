@@ -103,36 +103,36 @@ interface IVerificationRegistry {
     ) external;
 
     function issueByDelegateSigned(
-        address identity,
         bytes32 digest,
         uint256 exp,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
     ) external;
 
     function revokeByDelegateSigned(
-        address identity,
         bytes32 digest,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
     ) external;
 
-    function issueByDelegateWithCustomTypeSigned(
+    function issueByDelegateWithCustomDelegateTypeSigned(
         bytes32 delegateType,
-        address identity,
         bytes32 digest,
         uint256 exp,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
     ) external;
 
-    function revokeByDelegateWithCustomTypeSigned(
+    function revokeByDelegateWithCustomDelegateTypeSigned(
         bytes32 delegateType,
-        address identity,
         bytes32 digest,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
