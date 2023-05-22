@@ -28,7 +28,7 @@ interface IIdentityHandler {
 
     /**
      * @dev Associates a delegate type with an entity. The intention is to allow just that kind of delegates to perform actions
-     * on behalf of the entity
+     * on behalf of the entity. More than one delegate type can be associated to a given entity
      */
     function addDelegateType(bytes32 delegateType) external;
 
@@ -52,6 +52,15 @@ interface IIdentityHandler {
     event NewDelegateTypeChange(
         bytes32 indexed delegateType,
         address indexed by,
+        bool status
+    );
+
+    /**
+     * @dev if status true, the added didRegistry is valid for the specified "by" entity, otherwise it will be no longer valid.
+     */
+    event DidRegistryChange(
+        address indexed by,
+        address indexed didRegistry,
         bool status
     );
 }

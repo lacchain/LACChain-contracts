@@ -191,7 +191,6 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         uint256 exp
     ) internal {
         groupDetail memory g = group[memberEntity];
-        // require(g.gId == 0, "MAA"); // todo
         uint256 memberGId;
         uint256 parentGId = group[parentEntity].gId;
         if (g.gId > 0) {

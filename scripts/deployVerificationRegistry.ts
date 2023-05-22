@@ -2,7 +2,7 @@ import { ethers, lacchain } from "hardhat";
 
 async function main() {
   const accounts = lacchain.getSigners();
-  const artifactName = "CredentialRegistry";
+  const artifactName = "VerificationRegistry";
   const defaultDidRegistry = "0xabD12121728099199E307faDbc12E6341fc2eE22";
   const defaultDelegateType =
     "0x0be0ff6b6d81f13f4d66a7dbb4cd4b6018141f5d65f53b245681255a1d2667f4"; // bytes32

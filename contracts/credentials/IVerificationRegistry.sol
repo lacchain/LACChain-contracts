@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.18;
 
-interface ICredentialRegistry {
+interface IVerificationRegistry {
     /**
      * Once revoked it will not longer be valid
      */
@@ -23,6 +23,10 @@ interface ICredentialRegistry {
         bool onHoldStatus
     ) external;
 
+    /**
+     * @dev Returns details about an issued digest.
+     * @notice See "Detail" struct on this documentation.
+     */
     function getDetails(
         address issuer,
         bytes32 digest
@@ -99,36 +103,36 @@ interface ICredentialRegistry {
     ) external;
 
     function issueByDelegateSigned(
-        address identity,
         bytes32 digest,
         uint256 exp,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
     ) external;
 
     function revokeByDelegateSigned(
-        address identity,
         bytes32 digest,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
     ) external;
 
-    function issueByDelegateWithCustomTypeSigned(
+    function issueByDelegateWithCustomDelegateTypeSigned(
         bytes32 delegateType,
-        address identity,
         bytes32 digest,
         uint256 exp,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
     ) external;
 
-    function revokeByDelegateWithCustomTypeSigned(
+    function revokeByDelegateWithCustomDelegateTypeSigned(
         bytes32 delegateType,
-        address identity,
         bytes32 digest,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
@@ -154,6 +158,12 @@ interface ICredentialRegistry {
         uint exp
     );
 
+    /**
+     * @dev OnHoldChange is a toggle that indicates the status of some data represented by a "digest". If "isOnHold" is true it indicates that the data is
+     * in observation, so meanwhile that data should be taken into temporal status.
+     * If onHold is false it means a digest that was on observation finally ended that period. Now, the validity of that issue relative to the issuer "by" is
+     * up to offchain verification custom logic and whether the credential has not expired or revoked in this contract.
+     */
     event NewOnHoldChange(
         bytes32 indexed digest,
         address indexed by,
@@ -169,7 +179,7 @@ interface ICredentialRegistry {
      scenario 2: (iat > 0 && exp == 0) || (exp > current time) , means the data is still valid 
      scenario 3: exp < current time && exp !=0, means the data has expired (invalid)
      additionally:
-     scenario 3.1: iat = 0 && scenario 3: means a data was never issued but revoked (invalid)
+     scenario 3.1: iat == 0 && scenario 3: means a data was never issued but revoked (invalid)
      */
     struct Detail {
         uint256 iat;

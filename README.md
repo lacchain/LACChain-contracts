@@ -9,6 +9,8 @@
 ## Contracts
 
 - [Chain of Trust](docs/functional/chainOfTrust.md)
+- [Public Directory](docs/functional/publicDirectory.md)
 - [Did Registry](docs/functional/didRegistry.md)
+- [Verification Registry](docs/functional/verificationRegistry.md)
 
 ## License

@@ -2,12 +2,12 @@
 pragma solidity 0.8.18;
 
 import "../common/BaseRelayRecipient.sol";
-import "./ICredentialRegistry.sol";
+import "./IVerificationRegistry.sol";
 
 import "../utils/IdentityHandler.sol";
 
-contract CredentialRegistry is
-    ICredentialRegistry,
+contract VerificationRegistry is
+    IVerificationRegistry,
     BaseRelayRecipient,
     IdentityHandler
 {
@@ -17,7 +17,7 @@ contract CredentialRegistry is
         bytes32 delegateType
     )
         BaseRelayRecipient(trustedForwarderAddress)
-        IdentityHandler(didRegistry, delegateType, "CredentialRegistry")
+        IdentityHandler(didRegistry, delegateType, "VerificationRegistry")
     {}
 
     mapping(bytes32 => mapping(address => Detail)) private registers;
@@ -33,7 +33,7 @@ contract CredentialRegistry is
 
     function _issue(address by, bytes32 digest, uint256 exp) private {
         Detail memory detail = registers[digest][by];
-        require(detail.iat == 0 && detail.exp != 0, "RAE");
+        require(detail.iat == 0 && detail.exp == 0, "RAE");
         uint256 iat = block.timestamp;
         detail.iat = iat;
         if (exp > 0) {
@@ -122,6 +122,7 @@ contract CredentialRegistry is
     ) external {
         // resolve didRegistry to call
         address registryAddress = getDidRegistry(identity);
+
         _validateDelegate(
             registryAddress,
             identity,
@@ -170,9 +171,9 @@ contract CredentialRegistry is
     }
 
     function issueByDelegateSigned(
-        address identity,
         bytes32 digest,
         uint256 exp,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
@@ -189,11 +190,11 @@ contract CredentialRegistry is
         );
     }
 
-    function issueByDelegateWithCustomTypeSigned(
+    function issueByDelegateWithCustomDelegateTypeSigned(
         bytes32 delegateType,
-        address identity,
         bytes32 digest,
         uint256 exp,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
@@ -277,8 +278,8 @@ contract CredentialRegistry is
     }
 
     function revokeByDelegateSigned(
-        address identity,
         bytes32 digest,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
@@ -330,10 +331,10 @@ contract CredentialRegistry is
         _revoke(identity, digest);
     }
 
-    function revokeByDelegateWithCustomTypeSigned(
+    function revokeByDelegateWithCustomDelegateTypeSigned(
         bytes32 delegateType,
-        address identity,
         bytes32 digest,
+        address identity,
         uint8 sigV,
         bytes32 sigR,
         bytes32 sigS
