@@ -49,8 +49,12 @@ Chan of Trust smart contract is architecturally composed by the follings:
 - [Chain of Trust Base contract](../../contracts/chainOfTrust/IChainOfTrustBase.sol)
 - [Chain of Trust](../../contracts/chainOfTrust/IChainOfTrust.sol)
 
-## Didactic Diagram
+## Didactic Diagrams
 
 In the following diagram depth=3 is exemplified
 
-<img src="../img/CoT.png" width="900">
+<img src="../img/CoT.png" width="1100">
+
+In the following diagram different groups are added in the same level, this shows how different entities endorses trust at different levels.
+
+<img src="../img/CoT-levels-groups.png" width="1100">
