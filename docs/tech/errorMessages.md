@@ -42,3 +42,7 @@
 
 - DNR -> Did not Registered
 - DAE -> Did Already Exists
+- MIdDE -> Member Id does not exist
+- CAA -> Chain of Trust already associated
+- CNATM -> Chain of Trust Not associated to member
+- IA -> Invalid Address

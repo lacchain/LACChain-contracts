@@ -17,6 +17,7 @@ interface IPublicDirectory {
         address chainOfTrustManager;
         uint256 exp;
         bool expires; // if true, then exp must be greater than current timestamp
+        address chainOfTrustAddress;
     }
 
     /**
@@ -38,6 +39,20 @@ interface IPublicDirectory {
      */
     event DidAssociated(string did, uint256 memberId, uint256 prevBlock);
 
+    /**
+     * @dev Triggered when a new Chain of Trust Smart Contract address is associated to an existing member
+     * @param status If true, means the Chain of Trust Smart Contract address is being associated with the memberId; otherwise, means it is being disassociated.
+     */
+    event CoTChange(
+        address cotAddress,
+        uint256 memberId,
+        bool status,
+        uint256 prevBlock
+    );
+
+    /**
+     * @dev adds information data about an entity. Optionally associates a new chain of trust smart contract address with the referred entity.
+     */
     function addMember(setMember memory _member) external;
 
     /**
@@ -58,4 +73,18 @@ interface IPublicDirectory {
     function associateDid(string memory did, uint256 memberId) external;
 
     function disassociateDid(string memory did) external;
+
+    function addCoTAddress(address cotAddress, uint256 memberId) external;
+
+    function disassociateCoTAddress(
+        address cotAddress,
+        uint256 memberId
+    ) external;
+
+    function addCoTAddressByDid(address cotAddress, string memory did) external;
+
+    function disassociateCoTAddressByDid(
+        address cotAddress,
+        string memory did
+    ) external;
 }
