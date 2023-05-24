@@ -4,17 +4,20 @@ pragma solidity 0.8.18;
 interface IPublicDirectory {
     struct member {
         string name;
-        address chainOfTrustManager;
         uint256 exp;
         uint256 iat;
         uint256 uat;
         bool expires;
     }
 
+    struct fullDetails {
+        member memberData;
+        uint256 memberId;
+    }
+
     struct setMember {
         string did;
         string name;
-        address chainOfTrustManager;
         uint256 exp;
         bool expires; // if true, then exp must be greater than current timestamp
         address chainOfTrustAddress;
@@ -24,7 +27,8 @@ interface IPublicDirectory {
      * Document prevBlock
      */
     event MemberChanged(
-        string did,
+        uint256 indexed memberId,
+        string indexed did,
         uint256 iat,
         uint256 exp,
         bool expires,
@@ -32,20 +36,28 @@ interface IPublicDirectory {
         uint256 prevBlock
     );
 
-    event DidDisassociated(string did, uint256 memberId, uint256 prevBlock);
+    event DidDisassociated(
+        string indexed did,
+        uint256 indexed memberId,
+        uint256 prevBlock
+    );
 
     /**
      * @dev Triggered when a new did is associated to an existing member data
      */
-    event DidAssociated(string did, uint256 memberId, uint256 prevBlock);
+    event DidAssociated(
+        string indexed did,
+        uint256 indexed memberId,
+        uint256 prevBlock
+    );
 
     /**
      * @dev Triggered when a new Chain of Trust Smart Contract address is associated to an existing member
      * @param status If true, means the Chain of Trust Smart Contract address is being associated with the memberId; otherwise, means it is being disassociated.
      */
     event CoTChange(
-        address cotAddress,
-        uint256 memberId,
+        address indexed cotAddress,
+        uint256 indexed memberId,
         bool status,
         uint256 prevBlock
     );
@@ -61,27 +73,29 @@ interface IPublicDirectory {
      */
     function removeMemberByDid(string memory did) external;
 
-    function updateMemberDetails(setMember memory _member) external;
+    function updateMemberDetailsByDid(setMember memory _member) external;
 
     function getMemberDetails(
         string memory did
-    ) external view returns (member memory foundMember);
+    ) external view returns (fullDetails memory foundMember);
 
     /**
      * @dev Associates a did to an existing member data
      */
-    function associateDid(string memory did, uint256 memberId) external;
-
-    function disassociateDid(string memory did) external;
-
-    function addCoTAddress(address cotAddress, uint256 memberId) external;
-
-    function disassociateCoTAddress(
-        address cotAddress,
-        uint256 memberId
+    function associateDid(
+        string memory did,
+        string memory didToAssociate
     ) external;
 
-    function addCoTAddressByDid(address cotAddress, string memory did) external;
+    function disassociateDid(
+        string memory did,
+        string memory didToDisassociate
+    ) external;
+
+    function associateCoTAddressByDid(
+        address cotAddress,
+        string memory did
+    ) external;
 
     function disassociateCoTAddressByDid(
         address cotAddress,

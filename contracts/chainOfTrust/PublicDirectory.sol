@@ -23,7 +23,6 @@ contract PublicDirectory is IPublicDirectory, Ownable {
         uint256 currentTimestamp = block.timestamp;
         member storage m = memberDetails[memberId];
         m.name = _member.name;
-        m.chainOfTrustManager = _member.chainOfTrustManager;
         m.iat = currentTimestamp;
 
         if (_member.expires) {
@@ -36,6 +35,7 @@ contract PublicDirectory is IPublicDirectory, Ownable {
             _addCoTAddress(_member.chainOfTrustAddress, memberId);
         }
         emit MemberChanged(
+            memberId,
             _member.did,
             currentTimestamp,
             m.exp,
@@ -43,32 +43,6 @@ contract PublicDirectory is IPublicDirectory, Ownable {
             currentTimestamp,
             prevBlock
         );
-        prevBlock = block.number;
-    }
-
-    function addCoTAddress(
-        address cotAddress,
-        uint256 memberId
-    ) public onlyOwner {
-        _validateAddressAndMemberCounter(cotAddress, memberId);
-        _addCoTAddress(cotAddress, memberId);
-        prevBlock = block.number;
-    }
-
-    function _addCoTAddress(address cotAddress, uint256 memberId) private {
-        require(!isCot[memberId][cotAddress], "CAA");
-        isCot[memberId][cotAddress] = true;
-        emit CoTChange(cotAddress, memberId, true, prevBlock);
-    }
-
-    function disassociateCoTAddress(
-        address cotAddress,
-        uint256 memberId
-    ) public onlyOwner {
-        _validateAddressAndMemberCounter(cotAddress, memberId);
-        require(isCot[memberId][cotAddress], "CNATM");
-        isCot[memberId][cotAddress] = false;
-        emit CoTChange(cotAddress, memberId, false, prevBlock);
         prevBlock = block.number;
     }
 
@@ -80,13 +54,21 @@ contract PublicDirectory is IPublicDirectory, Ownable {
         require(memberCounter >= memberId, "MIdDE");
     }
 
-    function addCoTAddressByDid(
+    function associateCoTAddressByDid(
         address cotAddress,
         string memory did
     ) external onlyOwner {
         address didAddr = _computeAddress(did);
         uint256 memberId = id[didAddr];
-        addCoTAddress(cotAddress, memberId);
+        _validateAddressAndMemberCounter(cotAddress, memberId);
+        _addCoTAddress(cotAddress, memberId);
+        prevBlock = block.number;
+    }
+
+    function _addCoTAddress(address cotAddress, uint256 memberId) private {
+        require(!isCot[memberId][cotAddress], "CAA");
+        isCot[memberId][cotAddress] = true;
+        emit CoTChange(cotAddress, memberId, true, prevBlock);
     }
 
     function disassociateCoTAddressByDid(
@@ -95,15 +77,22 @@ contract PublicDirectory is IPublicDirectory, Ownable {
     ) external onlyOwner {
         address didAddr = _computeAddress(did);
         uint256 memberId = id[didAddr];
-        disassociateCoTAddress(cotAddress, memberId);
+        _validateAddressAndMemberCounter(cotAddress, memberId);
+        require(isCot[memberId][cotAddress], "CNATM");
+        isCot[memberId][cotAddress] = false;
+        emit CoTChange(cotAddress, memberId, false, prevBlock);
+        prevBlock = block.number;
     }
 
     // many dids may map to the same member description
     function associateDid(
         string memory did,
-        uint256 memberId
+        string memory didToAssociate
     ) external onlyOwner {
-        _associateDid(did, memberId);
+        address didAddr = _computeAddress(did);
+        uint256 memberId = id[didAddr];
+        _validateMemberIdExists(memberId);
+        _associateDid(didToAssociate, memberId);
         prevBlock = block.number;
     }
 
@@ -114,12 +103,18 @@ contract PublicDirectory is IPublicDirectory, Ownable {
         emit DidAssociated(did, memberId, prevBlock);
     }
 
-    function disassociateDid(string memory did) external onlyOwner {
-        address didAddr = _computeAddress(did);
+    function disassociateDid(
+        string memory did,
+        string memory didToDisassociate
+    ) external onlyOwner {
+        address didAddr1 = _computeAddress(did);
+        uint256 memberId1 = id[didAddr1];
+        address didAddr = _computeAddress(didToDisassociate);
         uint256 memberId = id[didAddr];
+        require(memberId1 == memberId, "ALODRPE");
         _validateMemberIdExists(memberId);
         id[didAddr] = 0; // freed up
-        emit DidDisassociated(did, memberId, prevBlock);
+        emit DidDisassociated(didToDisassociate, memberId, prevBlock);
         prevBlock = block.number;
     }
 
@@ -131,8 +126,11 @@ contract PublicDirectory is IPublicDirectory, Ownable {
         member storage memberDetail = memberDetails[memberId];
         uint256 currentTimestamp = block.timestamp;
         memberDetail.exp = currentTimestamp;
-        memberDetail.expires = true;
+        if (!memberDetail.expires) {
+            memberDetail.expires = true;
+        }
         emit MemberChanged(
+            memberId,
             did,
             memberDetail.iat,
             currentTimestamp,
@@ -143,7 +141,9 @@ contract PublicDirectory is IPublicDirectory, Ownable {
         prevBlock = block.number;
     }
 
-    function updateMemberDetails(setMember memory _member) external onlyOwner {
+    function updateMemberDetailsByDid(
+        setMember memory _member
+    ) external onlyOwner {
         address didAddr = _computeAddress(_member.did);
         uint256 memberId = id[didAddr];
         _validateMemberIdExists(memberId);
@@ -153,9 +153,6 @@ contract PublicDirectory is IPublicDirectory, Ownable {
         if (bytes(_member.name).length > 0) {
             m.name = _member.name;
         }
-        if (_member.chainOfTrustManager != address(0)) {
-            m.chainOfTrustManager = _member.chainOfTrustManager;
-        }
         m.uat = currentTimestamp;
         if (_member.expires) {
             require(_member.exp > block.timestamp, "IET");
@@ -163,8 +160,14 @@ contract PublicDirectory is IPublicDirectory, Ownable {
             if (!m.expires) {
                 m.expires = true;
             }
+        } else {
+            if (m.expires) {
+                m.expires = false;
+                m.exp = 0;
+            }
         }
         emit MemberChanged(
+            memberId,
             _member.did,
             m.iat,
             m.exp,
@@ -177,10 +180,12 @@ contract PublicDirectory is IPublicDirectory, Ownable {
 
     function getMemberDetails(
         string memory did
-    ) public view returns (member memory foundMember) {
+    ) public view returns (fullDetails memory foundMember) {
         address didAddr = _computeAddress(did);
         uint256 memberId = id[didAddr];
-        foundMember = memberDetails[memberId];
+        member memory m = memberDetails[memberId];
+        foundMember.memberData = m;
+        foundMember.memberId = memberId;
     }
 
     function _computeAddress(
