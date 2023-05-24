@@ -37,6 +37,7 @@ contract VerificationRegistry is
         uint256 iat = block.timestamp;
         detail.iat = iat;
         if (exp > 0) {
+            require(exp > block.timestamp, "IET");
             // just skipping exp if zero, to save gas
             detail.exp = exp;
         }
