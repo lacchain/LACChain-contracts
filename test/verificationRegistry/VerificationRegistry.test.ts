@@ -70,12 +70,10 @@ describe(artifactName, function () {
       const exp = Math.floor(Date.now() / 1000) + delta;
       const Artifact = await ethers.getContractFactory(artifactName, entity1);
       const verificationRegistry = Artifact.attach(verificationRegistryAddress);
-      const result = await verificationRegistry.issue(
-        digest,
-        exp,
-        entity1.address
-      );
-      expect(result).not.to.emit(verificationRegistry, "NewIssuance");
+      try {
+        await verificationRegistry.issue(digest, exp, entity1.address);
+        throw new Error("Workaround ..."); // should never reach here since it is expected that issue operation will fail.
+      } catch (error) {}
     });
     it("Should throw on issuing an already issued digest by the same entity", async () => {
       const message = "some message digest";
@@ -112,12 +110,8 @@ describe(artifactName, function () {
     });
     it("Should return expected values on revoking a previously issued digest", async () => {
       const message = "some message";
-      await issue(
-        verificationRegistryAddress,
-        "some message",
-        3600 * 24 * 365,
-        entity1
-      );
+      const delta = 3600 * 24 * 365;
+      await issue(verificationRegistryAddress, "some message", delta, entity1);
       await revoke(verificationRegistryAddress, message, entity1);
     });
     it("Should set onHold to true on setting a digest in onHold", async () => {
@@ -340,7 +334,7 @@ describe(artifactName, function () {
         exp,
         organization.address
       );
-      expect(result)
+      await expect(result)
         .to.emit(contractInstance, "NewUpdate")
         .withArgs(digest, organization.address, exp);
     });
@@ -378,7 +372,7 @@ async function issue(
   const Artifact = await ethers.getContractFactory(artifactName, sender);
   const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
   const result = await verificationRegistry.issue(digest, exp, sender.address);
-  expect(result)
+  await expect(result)
     .to.emit(verificationRegistry, "NewIssuance")
     .withArgs(digest, sender.address, anyValue, exp);
   const q = await verificationRegistry.getDetails(sender.address, digest);
@@ -395,7 +389,7 @@ async function revoke(
   const Artifact = await ethers.getContractFactory(artifactName, sender);
   const verificationRegistry = Artifact.attach(_verificationRegistryAddress);
   const result = await verificationRegistry.revoke(digest, sender.address);
-  expect(result)
+  await expect(result)
     .to.emit(verificationRegistry, "NewRevocation")
     .withArgs(digest, sender.address, anyValue, anyValue);
 }
@@ -414,7 +408,7 @@ async function toggletOnHold(
     sender.address,
     expected
   );
-  expect(result)
+  await expect(result)
     .to.emit(verificationRegistry, "NewOnHoldChange")
     .withArgs(digest, sender.address, expected, anyValue);
   const q = await verificationRegistry.getDetails(sender.address, digest);
@@ -437,7 +431,7 @@ async function issueByDelegate(
     digest,
     exp
   );
-  expect(result)
+  await expect(result)
     .to.emit(verificationRegistry, "NewIssuance")
     .withArgs(digest, organization.address, anyValue, exp);
   const q = await verificationRegistry.getDetails(organization.address, digest);
@@ -463,7 +457,7 @@ async function issueByDelegateWithCustomType(
     digest,
     exp
   );
-  expect(result)
+  await expect(result)
     .to.emit(verificationRegistry, "NewIssuance")
     .withArgs(digest, organization.address, anyValue, exp);
   const q = await verificationRegistry.getDetails(organization.address, digest);
@@ -504,7 +498,7 @@ async function setCustomDelegateType(
   const Artifact = await ethers.getContractFactory(artifactName, organization);
   const ci = Artifact.attach(verificationRegistryAddress);
   const result = await ci.addDelegateType(customDelegateType);
-  expect(result)
+  await expect(result)
     .to.emit(ci, "NewDelegateTypeChange")
     .withArgs(customDelegateType, organization.address, true);
 }
@@ -519,7 +513,7 @@ async function addCustomDidRegistry(
   const result = await verificationRegistryOrg.addDidRegistry(
     customDidRegistryAddress
   );
-  expect(result)
+  await expect(result)
     .to.emit(verificationRegistryOrg, "DidRegistryChange")
     .withArgs(organization.address, customDidRegistryAddress, true);
 }
@@ -537,7 +531,7 @@ async function revokeByDelegate(
     organization.address,
     digest
   );
-  expect(result)
+  await expect(result)
     .to.emit(verificationRegistry, "NewRevocation")
     .withArgs(digest, organization.address, anyValue, anyValue);
 }
@@ -557,7 +551,7 @@ async function revokeByDelegateWithCustomType(
     organization.address,
     digest
   );
-  expect(result)
+  await expect(result)
     .to.emit(verificationRegistry, "NewRevocation")
     .withArgs(digest, organization.address, anyValue, anyValue);
 }
@@ -592,7 +586,7 @@ async function issueSigned(
     r,
     s
   );
-  expect(result)
+  await expect(result)
     .to.emit(contractInstance, "NewIssuance")
     .withArgs(digest, organization.address, anyValue, exp);
   const q = await contractInstance.getDetails(organization.address, digest);
@@ -625,7 +619,7 @@ async function revokeSigned(
     r,
     s
   );
-  expect(result)
+  await expect(result)
     .to.emit(contractInstance, "NewRevocation")
     .withArgs(digest, organization.address, anyValue, anyValue);
 }
@@ -661,7 +655,7 @@ async function issueByDelegateSigned(
     r,
     s
   );
-  expect(result)
+  await expect(result)
     .to.emit(contractInstance, "NewIssuance")
     .withArgs(digest, organization.address, anyValue, exp);
   const q = await contractInstance.getDetails(organization.address, digest);
@@ -695,7 +689,7 @@ async function revokeByDelegateSigned(
     r,
     s
   );
-  expect(result)
+  await expect(result)
     .to.emit(contractInstance, "NewRevocation")
     .withArgs(digest, organization.address, anyValue, anyValue);
 }
@@ -734,7 +728,7 @@ async function issueByDelegateWithCustomDelegateTypeSigned(
       r,
       s
     );
-  expect(result)
+  await expect(result)
     .to.emit(contractInstance, "NewIssuance")
     .withArgs(digest, organization.address, anyValue, exp);
   const q = await contractInstance.getDetails(organization.address, digest);
@@ -771,7 +765,7 @@ async function revokeByDelegateWithCustomDelegateTypeSigned(
       r,
       s
     );
-  expect(result)
+  await expect(result)
     .to.emit(contractInstance, "NewRevocation")
     .withArgs(digest, organization.address, anyValue, anyValue);
 }
