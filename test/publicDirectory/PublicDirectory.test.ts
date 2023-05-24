@@ -407,6 +407,15 @@ describe(artifactName, function () {
         .to.emit(publicDirectoryInstance, "CoTChange")
         .withArgs(mockCoTAddress, anyValue, false, anyValue);
     });
+    it("Should allow an multiple entities pointing to the same Chain of trust address", async function () {
+      const did1 =
+        "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C";
+      const cotAddr = cotAddressExample.address;
+      await addMockMember(did1, cotAddr);
+
+      const did2 = "did:lac:0xd3684bfCA98E4678fE70612cadC687b5FFAA142e";
+      await addMockMember(did2, cotAddr);
+    });
   });
 });
 
@@ -428,7 +437,10 @@ async function addMember(member: IPublicDirectory.SetMemberStruct) {
     );
 }
 
-async function addMockMember(did: string) {
+async function addMockMember(
+  did: string,
+  chainOfTrustAddress = cotAddressExample.address
+) {
   let expires = false;
   let exp = 0;
   let memberData: IPublicDirectory.SetMemberStruct = {
@@ -436,7 +448,7 @@ async function addMockMember(did: string) {
     name: "Acme",
     exp,
     expires,
-    chainOfTrustAddress: cotAddressExample.address,
+    chainOfTrustAddress,
   };
   const result = await publicDirectoryInstance.addMember(memberData);
   await sleep(2);
