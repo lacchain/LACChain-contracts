@@ -1,19 +1,63 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity ^0.8.9;
 
-import "./IPublicDirectory.sol";
-import "../utils/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
 
-contract PublicDirectory is IPublicDirectory, Ownable {
+import "../IPublicDirectory.sol";
+
+contract PublicDirectoryUpgradeable is
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable,
+    BaseRelayRecipientUpgradeable,
+    IPublicDirectory
+{
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address trustedForwarderAddress) public initializer {
+        __BaseRelayRecipient_init(trustedForwarderAddress);
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+    }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
+
+    /**
+     * return the sender of this call.
+     * if the call came through our Relay Hub, return the original sender.
+     * should be used in the contract anywhere instead of msg.sender
+     */
+    function _msgSender()
+        internal
+        view
+        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
+        returns (address sender)
+    {
+        bytes memory bytesSender;
+        bool success;
+        (success, bytesSender) = trustedForwarder.staticcall(
+            abi.encodeWithSignature("getMsgSender()")
+        );
+
+        require(success, "SCF");
+
+        return abi.decode(bytesSender, (address));
+    }
+
+    /***************** CORE METHODS **********************/
     mapping(uint256 => member) public memberDetails;
     mapping(address => uint256) public id;
     uint256 public memberCounter;
     uint256 prevBlock;
     mapping(uint256 => mapping(address => bool)) public isCot;
-
-    constructor(
-        address trustedForwarderAddress
-    ) BaseRelayRecipient(trustedForwarderAddress) {}
 
     function addMember(setMember memory _member) external onlyOwner {
         memberCounter++;
