@@ -1,11 +1,9 @@
 import { expect } from "chai";
 import { ethers, lacchain } from "hardhat";
-import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
-import { getAddressFromDid, sleep } from "../util";
-import { deployDidRegistry } from "../identity/Identity.test";
+import { toUtf8Bytes } from "ethers/lib/utils";
+import { sleep } from "../util";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { IPublicDirectory, PublicDirectory } from "../../typechain-types";
-import { any } from "hardhat/internal/core/params/argumentTypes";
 
 const artifactName = "PublicDirectory";
 let publicDirectoryInstance: PublicDirectory;
@@ -41,6 +39,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: cotAddressExample.address,
+        rawData: "some structured data",
       };
       await addMember(memberData);
     });
@@ -56,6 +55,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: cotAddressExample.address,
+        rawData: "some structured data",
       };
       await addMember(memberData);
       expires = true;
@@ -67,6 +67,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: ethers.constants.AddressZero,
+        rawData: toUtf8Bytes(""),
       };
       const result = await publicDirectoryInstance.updateMemberDetailsByDid(
         memberData
@@ -89,6 +90,7 @@ describe(artifactName, function () {
           exp: 0,
           expires: false,
           chainOfTrustAddress: ethers.constants.AddressZero,
+          rawData: toUtf8Bytes(""),
         };
         await publicDirectoryInstance.updateMemberDetailsByDid(memberData);
         throw new Error("Workaround ..."); // should never reach here since it is expected that issue operation will fail.
@@ -106,6 +108,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: cotAddressExample.address,
+        rawData: "some structured data",
       };
       await addMember(memberData);
       const newName = "Acme-V1";
@@ -116,6 +119,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: ethers.constants.AddressZero,
+        rawData: toUtf8Bytes(""),
       };
       const result = await publicDirectoryInstance.updateMemberDetailsByDid(
         memberData
@@ -141,6 +145,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: cotAddressExample.address,
+        rawData: "some structured data",
       };
       await addMember(memberData);
     });
@@ -157,6 +162,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: cotAddressExample.address,
+        rawData: "some structured data",
       };
       await addMember(memberData);
       expires = false;
@@ -167,6 +173,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: ethers.constants.AddressZero,
+        rawData: toUtf8Bytes(""),
       };
       const result = await publicDirectoryInstance.updateMemberDetailsByDid(
         memberData
@@ -201,6 +208,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: cotAddressExample.address,
+        rawData: "some structured data",
       };
       await addMember(memberData);
       const newName = ""; // leaving empty so meaning this is not updated
@@ -211,6 +219,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: ethers.constants.AddressZero,
+        rawData: toUtf8Bytes(""),
       };
       const result = await publicDirectoryInstance.updateMemberDetailsByDid(
         memberData
@@ -234,6 +243,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: cotAddressExample.address,
+        rawData: "some structured data",
       };
       await addMember(memberData);
       const result = publicDirectoryInstance.removeMemberByDid(did);
@@ -271,6 +281,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: cotAddressExample.address,
+        rawData: "some structured data",
       };
       await addMember(memberData);
       const newName = "Acme-V1"; // leaving empty so meaning this is not updated
@@ -281,6 +292,7 @@ describe(artifactName, function () {
         exp,
         expires,
         chainOfTrustAddress: ethers.constants.AddressZero,
+        rawData: toUtf8Bytes(""),
       };
       const result = await publicDirectoryInstance.updateMemberDetailsByDid(
         memberData
@@ -412,7 +424,6 @@ describe(artifactName, function () {
         "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C";
       const cotAddr = cotAddressExample.address;
       await addMockMember(did1, cotAddr);
-
       const did2 = "did:lac:0xd3684bfCA98E4678fE70612cadC687b5FFAA142e";
       await addMockMember(did2, cotAddr);
     });
@@ -420,7 +431,10 @@ describe(artifactName, function () {
 });
 
 async function addMember(member: IPublicDirectory.SetMemberStruct) {
-  const { did, exp, expires } = member;
+  const { did, exp, expires, rawData } = member;
+  const stringRawData = rawData.toString();
+  member.rawData = toUtf8Bytes(stringRawData);
+
   const result = await publicDirectoryInstance.addMember(member);
   await sleep(2);
   let expValueToVerify = expires ? exp : 0;
@@ -435,6 +449,12 @@ async function addMember(member: IPublicDirectory.SetMemberStruct) {
       anyValue,
       anyValue
     );
+  const memberDetails = (await publicDirectoryInstance.getMemberDetails(did))
+    .memberData;
+  expect(memberDetails.name).to.equal(member.name);
+  expect(memberDetails.expires).to.equal(expires);
+  expect(memberDetails.exp).to.equal(expValueToVerify);
+  expect(memberDetails.rawdDta).to.equal(ethers.utils.hexlify(member.rawData));
 }
 
 async function addMockMember(
@@ -449,6 +469,7 @@ async function addMockMember(
     exp,
     expires,
     chainOfTrustAddress,
+    rawData: toUtf8Bytes("some structured data"),
   };
   const result = await publicDirectoryInstance.addMember(memberData);
   await sleep(2);
@@ -479,6 +500,7 @@ async function createMemberAndAssociateAdditionalDid(
     exp,
     expires,
     chainOfTrustAddress: cotAddressExample.address,
+    rawData: toUtf8Bytes("some structured data"),
   };
   await addMember(memberData);
   await associateAdditionalDid(did, newDid);

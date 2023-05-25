@@ -25,6 +25,10 @@ contract PublicDirectory is IPublicDirectory, Ownable {
         m.name = _member.name;
         m.iat = currentTimestamp;
 
+        if (_member.rawData.length > 0) {
+            m.rawdDta = _member.rawData;
+        }
+
         if (_member.expires) {
             require(_member.exp > block.timestamp, "IET");
             m.exp = _member.exp;
@@ -166,6 +170,11 @@ contract PublicDirectory is IPublicDirectory, Ownable {
                 m.exp = 0;
             }
         }
+
+        if (_member.rawData.length > 0) {
+            m.rawdDta = _member.rawData;
+        }
+
         emit MemberChanged(
             memberId,
             _member.did,
