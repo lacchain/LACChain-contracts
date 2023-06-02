@@ -22,12 +22,7 @@ contract PublicDirectory is IPublicDirectory, Ownable {
 
         uint256 currentTimestamp = block.timestamp;
         member storage m = memberDetails[memberId];
-        m.name = _member.name;
         m.iat = currentTimestamp;
-
-        if (_member.rawData.length > 0) {
-            m.rawdDta = _member.rawData;
-        }
 
         if (_member.expires) {
             require(_member.exp > block.timestamp, "IET");
@@ -44,6 +39,7 @@ contract PublicDirectory is IPublicDirectory, Ownable {
             currentTimestamp,
             m.exp,
             _member.expires,
+            _member.rawData,
             currentTimestamp,
             prevBlock
         );
@@ -133,12 +129,14 @@ contract PublicDirectory is IPublicDirectory, Ownable {
         if (!memberDetail.expires) {
             memberDetail.expires = true;
         }
+        bytes memory r = "";
         emit MemberChanged(
             memberId,
             did,
             memberDetail.iat,
             currentTimestamp,
             true,
+            r,
             currentTimestamp,
             prevBlock
         );
@@ -154,9 +152,6 @@ contract PublicDirectory is IPublicDirectory, Ownable {
 
         uint256 currentTimestamp = block.timestamp;
         member storage m = memberDetails[memberId];
-        if (bytes(_member.name).length > 0) {
-            m.name = _member.name;
-        }
         m.uat = currentTimestamp;
         if (_member.expires) {
             require(_member.exp > block.timestamp, "IET");
@@ -171,16 +166,13 @@ contract PublicDirectory is IPublicDirectory, Ownable {
             }
         }
 
-        if (_member.rawData.length > 0) {
-            m.rawdDta = _member.rawData;
-        }
-
         emit MemberChanged(
             memberId,
             _member.did,
             m.iat,
             m.exp,
             _member.expires,
+            _member.rawData,
             currentTimestamp,
             prevBlock
         );

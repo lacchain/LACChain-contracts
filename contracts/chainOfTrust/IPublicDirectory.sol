@@ -3,7 +3,6 @@ pragma solidity 0.8.18;
 
 interface IPublicDirectory {
     /**
-     * @param name Entity name
      * @param exp Expiration data after which the registry is considered invalid
      * @param iat Registration date
      * @param expires If false, the registry never expires so `exp` is not required on registering the member as well as on verifying the registration
@@ -11,12 +10,10 @@ interface IPublicDirectory {
      * associated to the member as well as different versions.
      */
     struct member {
-        string name;
         uint256 exp;
         uint256 iat;
         uint256 uat;
         bool expires;
-        bytes rawdDta;
     }
 
     struct fullDetails {
@@ -26,7 +23,6 @@ interface IPublicDirectory {
 
     struct setMember {
         string did;
-        string name;
         uint256 exp;
         bool expires; // if true, then exp must be greater than current timestamp
         address chainOfTrustAddress;
@@ -42,6 +38,7 @@ interface IPublicDirectory {
         uint256 iat,
         uint256 exp,
         bool expires,
+        bytes rawData,
         uint256 currentTimestap,
         uint256 prevBlock
     );
