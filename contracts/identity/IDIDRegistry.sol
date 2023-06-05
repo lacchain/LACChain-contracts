@@ -22,7 +22,7 @@ interface IDIDRegistry {
         uint validTo,
         uint changeTime,
         uint previousChange,
-        bool reason
+        bool compromised
     );
 
     event DIDDelegateChanged(
@@ -48,6 +48,12 @@ interface IDIDRegistry {
     function removeController(address identity, address controller) external;
 
     function changeController(address identity, address newController) external;
+
+    function expirationAttribute(
+        address identity,
+        bytes32 attributeNameHash,
+        bytes32 attributeValueHash
+    ) external view returns (uint256);
 
     function changeControllerSigned(
         address identity,

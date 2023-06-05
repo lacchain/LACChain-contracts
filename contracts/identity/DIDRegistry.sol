@@ -295,15 +295,9 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
     ) internal onlyController(identity, actor) {
         bytes32 attributeNameHash = keccak256(name);
         bytes32 attributeValueHash = keccak256(value);
-        uint256 revoked;
-        if (revokeDeltaTime > 0) {
-            revoked = _validateExp(
-                revokeDeltaTime,
-                attributes[identity][attributeNameHash][attributeValueHash]
-            );
-        } else {
-            revoked = 0;
-        }
+        uint256 currentTime = block.timestamp;
+        // no matter if the attribute was issued before it just sets the revoked time
+        uint256 revoked = currentTime - revokeDeltaTime;
         attributes[identity][attributeNameHash][attributeValueHash] = revoked;
         address id = identity;
         emit DIDAttributeChanged(
@@ -311,7 +305,7 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
             name,
             value,
             revoked,
-            block.timestamp,
+            currentTime,
             changed[id],
             compromised
         );
@@ -389,6 +383,17 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
             keccak256(abi.encode(delegateType))
         ][delegate];
         return (validity > block.timestamp);
+    }
+
+    function expirationAttribute(
+        address identity,
+        bytes32 attributeNameHash,
+        bytes32 attributeValueHash
+    ) public view returns (uint256) {
+        uint validity = attributes[identity][attributeNameHash][
+            attributeValueHash
+        ];
+        return validity;
     }
 
     function addDelegate(
