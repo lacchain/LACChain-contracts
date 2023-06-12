@@ -780,5 +780,159 @@ describe(artifactName, function () {
       await sleep(2);
       await expect(result).not.to.emit(contract3, "DidChanged");
     });
+    it("Should transfer root manager by current root manager", async () => {
+      const rootManagerAddress = rootManager.address;
+      const depth = 3; // max depth
+      const revokeMode = 2; // root and parent can revoke
+      const isRootMaintainer = false;
+      const contractAddress = await deployChainOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode,
+        isRootMaintainer
+      );
+      const A0 = await ethers.getContractFactory(artifactName, rootManager);
+      const c0 = A0.attach(contractAddress);
+      const newRootManager = member1;
+      const tx = await c0.transferRoot(newRootManager.address);
+      tx.wait();
+      expect(tx)
+        .to.emit(c0, "RootManagerUpdated")
+        .withArgs(
+          rootManager.address,
+          rootManager.address,
+          newRootManager.address
+        );
+      const newRootManagerGroup = await c0.group(newRootManager.address);
+      expect(newRootManagerGroup.gId).to.eq(1);
+      const didAddress = getAddressFromDid(did);
+      expect(
+        newRootManagerGroup.didAddress.substring(2).toLowerCase()
+      ).to.equal(didAddress);
+    });
+    it("Should transfer root manager by contract owner", async () => {
+      const rootManagerAddress = rootManager.address;
+      const depth = 3; // max depth
+      const revokeMode = 2; // root and parent can revoke
+      const isRootMaintainer = false;
+      const contractAddress = await deployChainOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode,
+        isRootMaintainer
+      );
+      const A0 = await ethers.getContractFactory(artifactName, owner);
+      const c0 = A0.attach(contractAddress);
+      const newRootManager = member1;
+      const tx = await c0.transferRoot(newRootManager.address);
+      tx.wait();
+      expect(tx)
+        .to.emit(c0, "RootManagerUpdated")
+        .withArgs(owner.address, rootManager.address, newRootManager.address);
+    });
+    it("Unauthorized account shouldn't be able to change the root manager", async () => {
+      const rootManagerAddress = rootManager.address;
+      const depth = 3; // max depth
+      const revokeMode = 2; // root and parent can revoke
+      const isRootMaintainer = false;
+      const contractAddress = await deployChainOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode,
+        isRootMaintainer
+      );
+      const A0 = await ethers.getContractFactory(artifactName, owner);
+      const c0 = A0.attach(contractAddress);
+      const newRootManager = member1;
+      const tx = await c0.transferRoot(newRootManager.address);
+      tx.wait();
+      const attacker = member2;
+      const A1 = await ethers.getContractFactory(artifactName, attacker);
+      const c1 = A1.attach(contractAddress);
+      try {
+        const tx1 = await c1.transferRoot(attacker.address);
+        await tx1.wait();
+      } catch (e: any) {
+        return;
+      }
+      throw new Error("Should have thrown an error");
+    });
+    it("Old root manager shouldn't be able to add a itself as a root manager", async () => {
+      const rootManagerAddress = rootManager.address;
+      const depth = 3; // max depth
+      const revokeMode = 2; // root and parent can revoke
+      const isRootMaintainer = false;
+      const contractAddress = await deployChainOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode,
+        isRootMaintainer
+      );
+      const A0 = await ethers.getContractFactory(artifactName, owner);
+      const c0 = A0.attach(contractAddress);
+      const newRootManager = member1;
+      const tx = await c0.transferRoot(newRootManager.address);
+      tx.wait();
+      const A1 = await ethers.getContractFactory(artifactName, rootManager);
+      const c1 = A1.attach(contractAddress);
+      try {
+        const tx1 = await c1.transferRoot(member3.address);
+        await tx1.wait();
+      } catch (e: any) {
+        return;
+      }
+      throw new Error("Should have thrown an error");
+    });
+    it("Should throw if candidate to root manager already exists", async () => {
+      const rootManagerAddress = rootManager.address;
+      const depth = 3; // max depth
+      const revokeMode = 2; // root and parent can revoke
+      const isRootMaintainer = false;
+      const contractAddress = await deployChainOfTrust(
+        depth,
+        did,
+        rootManagerAddress,
+        revokeMode,
+        isRootMaintainer
+      );
+      const A0 = await ethers.getContractFactory(artifactName, owner);
+      const c0 = A0.attach(contractAddress);
+      const newRootManager = member1;
+      const tx = await c0.transferRoot(newRootManager.address);
+      await tx.wait();
+      const A1 = await ethers.getContractFactory(artifactName, newRootManager);
+      const c1 = A1.attach(contractAddress);
+      const memberDid =
+        "did:web:lacchain.id:5DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5H";
+
+      const memberAddress = member2.address;
+      const result = await c1.addOrUpdateGroupMember(
+        memberAddress,
+        memberDid,
+        86400 * 365
+      );
+      await result.wait();
+
+      const t = await c1.group(memberAddress);
+      const didAddress = getAddressFromDid(memberDid);
+      expect(t.didAddress.substring(2).toLowerCase()).to.equal(didAddress);
+      await expect(result)
+        .to.emit(c1, "DidChanged")
+        .withArgs(memberAddress, memberDid, anyValue);
+      await expect(result)
+        .to.emit(c1, "GroupMemberChanged")
+        .withArgs(
+          newRootManager.address,
+          memberAddress,
+          memberDid,
+          anyValue,
+          anyValue,
+          anyValue
+        );
+    });
   });
 });

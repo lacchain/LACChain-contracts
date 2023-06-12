@@ -25,6 +25,7 @@
 - MDEIYR -> Member does not exist in your registry
 - DDM -> Did does not match
 - MAE -> Member Already Expired
+- MAEx -> Member Already Exists
 - RBRNE -> Revocation by Root Not Enabled
 - RBAANE -> Revocation by All Ancestors Not Enabled
 - OR -> Only Root
