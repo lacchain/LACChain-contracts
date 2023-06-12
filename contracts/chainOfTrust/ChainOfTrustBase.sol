@@ -11,7 +11,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
     // entityManager => (gId, didAddress)
     mapping(address => groupDetail) public group;
     // gId => entityManager
-    mapping(uint256 => address) manager;
+    mapping(uint256 => address) public manager;
 
     // gIdParent => gIdMember  => groupMemberDetail
     mapping(uint256 => mapping(uint256 => MemberDetail)) public trustedList;
@@ -71,6 +71,21 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         detail.didAddress = didAddress;
         emit DidChanged(memberAddress, did, prevBlock);
         prevBlock = block.number;
+    }
+
+    function transferRoot(address newRootManager) external {
+        address executor = _msgSender();
+        address rootManager = manager[1];
+        require((executor == rootManager || executor == owner()), "NA");
+        groupDetail storage newGroup = group[newRootManager];
+        require(newGroup.gId == 0, "MAEx"); // means the new root manager candidate shouldn't exit.
+        manager[1] = newRootManager;
+        groupDetail storage t = group[rootManager];
+        newGroup.gId = t.gId;
+        newGroup.didAddress = t.didAddress;
+        t.didAddress = address(0);
+        t.gId = 0;
+        emit RootManagerUpdated(executor, rootManager, newRootManager);
     }
 
     function _configMember(
