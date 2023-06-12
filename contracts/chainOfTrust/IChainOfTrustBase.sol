@@ -64,6 +64,23 @@ interface IChainOfTrustBase {
         uint256 prevBlock
     );
 
+    /**
+     * @dev Emmited the when the root manager is updated to a new one.
+     * @param executor: The account that executed the update
+     * @param rootManager: The current root manager
+     * @param newRootManager: The new root manager
+     */
+    event RootManagerUpdated(
+        address indexed executor,
+        address indexed rootManager,
+        address indexed newRootManager
+    );
+
+    /**
+     * @dev Only current root manager or contract owner can transfer root manager
+     */
+    function transferRoot(address newRootManager) external;
+
     function updateMaintainerMode(bool rootMaintainer) external;
 
     function updateDepth(uint8 chainDepth) external;

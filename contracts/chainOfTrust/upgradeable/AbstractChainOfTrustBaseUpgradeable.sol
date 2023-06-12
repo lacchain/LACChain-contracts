@@ -15,7 +15,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
     // entityManager => (gId, didAddress)
     mapping(address => groupDetail) public group;
     // gId => entityManager
-    mapping(uint256 => address) manager;
+    mapping(uint256 => address) public manager;
 
     // gIdParent => gIdMember  => groupMemberDetail
     mapping(uint256 => mapping(uint256 => MemberDetail)) public trustedList;
@@ -54,6 +54,31 @@ contract AbstractChainOfTrustBaseUpgradeable is
         __Ownable_init();
     }
 
+    /**
+     * return the sender of this call.
+     * if the call came through our Relay Hub, return the original sender.
+     * should be used in the contract anywhere instead of msg.sender
+     */
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
+        returns (address sender)
+    {
+        bytes memory bytesSender;
+        bool success;
+        (success, bytesSender) = trustedForwarder.staticcall(
+            abi.encodeWithSignature("getMsgSender()")
+        );
+
+        require(success, "SCF");
+
+        return abi.decode(bytesSender, (address));
+    }
+
+    // #################################################################
+
     function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
         require(isRootMaintainer != rootMaintainer, "ISC");
         isRootMaintainer = rootMaintainer;
@@ -84,6 +109,21 @@ contract AbstractChainOfTrustBaseUpgradeable is
         detail.didAddress = didAddress;
         emit DidChanged(memberAddress, did, prevBlock);
         prevBlock = block.number;
+    }
+
+    function transferRoot(address newRootManager) external {
+        address executor = _msgSender();
+        address rootManager = manager[1];
+        require((executor == rootManager || executor == owner()), "NA");
+        groupDetail storage newGroup = group[newRootManager];
+        require(newGroup.gId == 0, "MAEx"); // means the new root manager candidate shouldn't exit.
+        manager[1] = newRootManager;
+        groupDetail storage t = group[rootManager];
+        newGroup.gId = t.gId;
+        newGroup.didAddress = t.didAddress;
+        t.didAddress = address(0);
+        t.gId = 0;
+        emit RootManagerUpdated(executor, rootManager, newRootManager);
     }
 
     function _configMember(
@@ -204,7 +244,6 @@ contract AbstractChainOfTrustBaseUpgradeable is
         uint256 exp
     ) internal {
         groupDetail memory g = group[memberEntity];
-        // require(g.gId == 0, "MAA"); // todo
         uint256 memberGId;
         uint256 parentGId = group[parentEntity].gId;
         if (g.gId > 0) {
@@ -322,26 +361,12 @@ contract AbstractChainOfTrustBaseUpgradeable is
         require(owner() == _msgSender(), "Ownable: caller is not the owner");
     }
 
+    // #################################################################
+
     /**
-     * return the sender of this call.
-     * if the call came through our Relay Hub, return the original sender.
-     * should be used in the contract anywhere instead of msg.sender
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
-        returns (address sender)
-    {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
-    }
+    uint256[45] private __gap;
 }
