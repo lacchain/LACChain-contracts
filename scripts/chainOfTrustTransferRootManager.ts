@@ -5,12 +5,12 @@ async function main() {
   // update vars accordinly before continuing
   const artifactName = "ChainOfTrustUpgradeable"; // update this with the correspondent artifact name: ChainOfTrustUpgradeable, ChainOfTrust, ChainOfTrustBaseUpgradeable or ChainOfTrustBase
   const curentOwner = accounts[0]; // usually this is the account that deploys the contract
-  const contractAddress = "0x1267E253DAa187b5E3080516765DFC237ab8a8F0"; // update this with the contract address to interact with.
-  const newOwnerAddress = accounts[1].address; // update this with the new root manager
+  const contractAddress = "0xEBB6854aa875867f684dd1d2338eC20908039c67"; // update this with the contract address to interact with.
+  const newRootManager = "0x4E4967AE0d1709B1ad865b56cfff0E0De475b25E"; //accounts[1].address; // update this with the new root manager
   // set new owner
   await transferRootManagerOwnership(
     curentOwner,
-    newOwnerAddress,
+    newRootManager,
     artifactName,
     contractAddress
   );
@@ -18,7 +18,7 @@ async function main() {
 
 async function transferRootManagerOwnership(
   curentOwner: Wallet,
-  newOwnerAddress: string,
+  newRootManager: string,
   artifactName: string,
   contractAddress: string
 ) {
@@ -29,10 +29,10 @@ async function transferRootManagerOwnership(
     "Transferring Root Manager from",
     await iFace.manager(1),
     "to",
-    newOwnerAddress
+    newRootManager
   );
-  await iFace.transferRoot(newOwnerAddress);
-  console.log("New Owner:", await iFace.manager(1));
+  await iFace.transferRoot(newRootManager);
+  console.log("New Root Manager: ", await iFace.manager(1));
 }
 
 main().catch((error) => {

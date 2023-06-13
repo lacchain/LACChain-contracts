@@ -84,7 +84,9 @@ describe(artifactName, function () {
         );
       const trusted = await contract.trustedList(1, 2);
       expect(trusted.exp).to.be.greaterThanOrEqual(trusted.iat);
-      const memberDetails = await contract.getMemberDetails(memberAddress);
+      const memberDetails = await contract.getMemberDetailsByEntityManager(
+        memberAddress
+      );
       const { gId, iat, exp, trustedBy, isValid } = memberDetails;
       expect(gId).to.eq(2);
       expect(iat).to.eq(trusted.iat);
@@ -243,7 +245,7 @@ describe(artifactName, function () {
       const newDepth = 1;
       const tx = await contractOwer.updateDepth(newDepth);
       await tx.wait();
-      const member2Details = await contractOwer.getMemberDetails(
+      const member2Details = await contractOwer.getMemberDetailsByEntityManager(
         member2Address
       );
       const { gId, iat, exp, trustedBy, isValid } = member2Details;
@@ -343,7 +345,9 @@ describe(artifactName, function () {
         );
         await expect(result).not.to.emit(contract, "GroupMemberChanged");
       } catch (e: any) {
-        const memberDetails = await contract.getMemberDetails(memberAddress);
+        const memberDetails = await contract.getMemberDetailsByEntityManager(
+          memberAddress
+        );
         const { gId, trustedBy, isValid } = memberDetails;
         expect(gId).to.eq(2);
         expect(trustedBy).to.eq(rootManager.address);

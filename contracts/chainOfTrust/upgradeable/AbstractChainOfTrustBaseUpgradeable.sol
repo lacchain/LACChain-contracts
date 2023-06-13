@@ -376,18 +376,18 @@ contract AbstractChainOfTrustBaseUpgradeable is
         require(owner() == _msgSender(), "Ownable: caller is not the owner");
     }
 
-    function getMemberDetails(
+    function getMemberDetailsByEntityManager(
         address memberEntityManager
     ) external view returns (MemberProfile memory member) {
         uint256 memberGId = group[memberEntityManager].gId;
+        member.gId = memberGId;
+        member.didAddress = group[memberEntityManager].didAddress;
         if (memberGId == 1) {
-            member.gId = 1;
             member.isValid = true;
             return member;
         }
         uint256 parentGId = trustedBy[memberGId];
         MemberDetail memory mDetail = trustedList[parentGId][memberGId];
-        member.gId = memberGId;
         member.trustedBy = manager[parentGId];
         member.exp = mDetail.exp;
         member.iat = mDetail.iat;

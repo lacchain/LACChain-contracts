@@ -13,6 +13,7 @@ interface IChainOfTrustBase {
         uint256 exp;
         uint256 gId;
         address trustedBy;
+        address didAddress;
         bool isValid;
     }
 
@@ -115,7 +116,7 @@ interface IChainOfTrustBase {
         string memory did
     ) external;
 
-    function getMemberDetails(
+    function getMemberDetailsByEntityManager(
         address memberEntityManager
     ) external view returns (MemberProfile memory member);
 }
