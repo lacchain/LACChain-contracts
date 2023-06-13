@@ -290,6 +290,21 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         return _verifyWhetherAChildCanBeAdded(grandParentGId, d - 1);
     }
 
+    function _validateMember(
+        uint256 memberGId,
+        uint8 d
+    ) private view returns (bool isValid) {
+        if (d == 0) return false;
+        if (memberGId == 1) {
+            return true;
+        }
+        uint256 parentGId = trustedBy[memberGId];
+        if (trustedList[parentGId][memberGId].exp < block.timestamp) {
+            return false;
+        }
+        return _validateMember(parentGId, d - 1);
+    }
+
     function _checkChainOfTrustByExpiration(
         uint256 memberGId
     ) private view returns (bool isValid) {
@@ -321,5 +336,23 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         }
 
         require(owner() == _msgSender(), "Ownable: caller is not the owner");
+    }
+
+    function getMemberDetails(
+        address memberEntityManager
+    ) external view returns (MemberProfile memory member) {
+        uint256 memberGId = group[memberEntityManager].gId;
+        if (memberGId == 1) {
+            member.gId = 1;
+            member.isValid = true;
+            return member;
+        }
+        uint256 parentGId = trustedBy[memberGId];
+        MemberDetail memory mDetail = trustedList[parentGId][memberGId];
+        member.gId = memberGId;
+        member.trustedBy = manager[parentGId];
+        member.exp = mDetail.exp;
+        member.iat = mDetail.iat;
+        member.isValid = _validateMember(memberGId, depth + 1); // depth + 1 since actually root is one level even though it is level "0"
     }
 }

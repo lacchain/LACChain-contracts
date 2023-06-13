@@ -8,6 +8,14 @@ interface IChainOfTrustBase {
         address didAddress;
     }
 
+    struct MemberProfile {
+        uint256 iat;
+        uint256 exp;
+        uint256 gId;
+        address trustedBy;
+        bool isValid;
+    }
+
     struct MemberDetail {
         uint256 iat;
         uint256 exp;
@@ -106,4 +114,8 @@ interface IChainOfTrustBase {
         address memberEntity,
         string memory did
     ) external;
+
+    function getMemberDetails(
+        address memberEntityManager
+    ) external view returns (MemberProfile memory member);
 }
