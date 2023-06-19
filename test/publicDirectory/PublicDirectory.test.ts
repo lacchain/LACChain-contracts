@@ -390,6 +390,8 @@ async function addMember(member: IPublicDirectory.SetMemberStruct) {
     .memberData;
   expect(memberDetails.expires).to.equal(expires);
   expect(memberDetails.exp).to.equal(expValueToVerify);
+  const prevBlock = await publicDirectoryInstance.prevBlock();
+  expect(prevBlock).to.be.greaterThan(0);
 }
 
 async function _addMember(

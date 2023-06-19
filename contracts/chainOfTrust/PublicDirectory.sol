@@ -8,7 +8,7 @@ contract PublicDirectory is IPublicDirectory, Ownable {
     mapping(uint256 => member) public memberDetails;
     mapping(address => uint256) public id;
     uint256 public memberCounter;
-    uint256 prevBlock;
+    uint256 public prevBlock;
     mapping(uint256 => mapping(address => bool)) public isCot;
 
     constructor(
