@@ -39,7 +39,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         isRootMaintainer = rootMaintainer;
     }
 
-    uint256 prevBlock;
+    uint256 public prevBlock;
 
     function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
         require(isRootMaintainer != rootMaintainer, "ISC");

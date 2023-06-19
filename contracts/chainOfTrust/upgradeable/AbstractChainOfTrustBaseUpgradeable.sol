@@ -21,7 +21,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
     mapping(uint256 => mapping(uint256 => MemberDetail)) public trustedList;
 
     mapping(uint256 => uint256) public trustedBy;
-    uint256 prevBlock;
+    uint256 public prevBlock;
 
     uint8 public depth;
     uint8 public revokeConfigMode;
