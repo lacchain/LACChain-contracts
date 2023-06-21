@@ -34,7 +34,7 @@ interface IPublicDirectory {
      */
     event MemberChanged(
         uint256 indexed memberId,
-        string indexed did,
+        string did,
         uint256 iat,
         uint256 exp,
         bool expires,
@@ -44,7 +44,7 @@ interface IPublicDirectory {
     );
 
     event DidDisassociated(
-        string indexed did,
+        string did,
         uint256 indexed memberId,
         uint256 prevBlock
     );
@@ -53,7 +53,7 @@ interface IPublicDirectory {
      * @dev Triggered when a new did is associated to an existing member data
      */
     event DidAssociated(
-        string indexed did,
+        string did,
         uint256 indexed memberId,
         uint256 prevBlock
     );
