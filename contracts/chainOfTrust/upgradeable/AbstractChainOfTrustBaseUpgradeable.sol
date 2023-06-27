@@ -11,8 +11,9 @@ contract AbstractChainOfTrustBaseUpgradeable is
     OwnableUpgradeable,
     IChainOfTrustBase
 {
+    // #################################################################
     uint256 public memberCounter;
-    // entityManager => (gId, didAddress)
+    // entityManager => (gId, did)
     mapping(address => groupDetail) public group;
     // gId => entityManager
     mapping(uint256 => address) public manager;
@@ -21,7 +22,6 @@ contract AbstractChainOfTrustBaseUpgradeable is
     mapping(uint256 => mapping(uint256 => MemberDetail)) public trustedList;
 
     mapping(uint256 => uint256) public trustedBy;
-    uint256 public prevBlock;
 
     uint8 public depth;
     uint8 public revokeConfigMode;
@@ -29,55 +29,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
     uint8 public constant ROOTANDPARENT = 1;
     uint8 public constant ALLANCESTORS = 2;
 
-    function __AbstractChainOfTrustBaseUpgradeable_init(
-        address trustedForwarderAddress,
-        uint8 chainDepth,
-        string memory did,
-        address rootEntityManager,
-        uint8 revokeMode,
-        bool rootMaintainer
-    ) internal onlyInitializing {
-        depth = chainDepth;
-        memberCounter++;
-        revokeConfigMode = revokeMode;
-        _configMember(memberCounter, did, rootEntityManager);
-        isRootMaintainer = rootMaintainer;
-        __AbstractChainOfTrustBaseUpgradeable_init_unchained(
-            trustedForwarderAddress
-        );
-    }
-
-    function __AbstractChainOfTrustBaseUpgradeable_init_unchained(
-        address trustedForwarderAddress
-    ) internal onlyInitializing {
-        __BaseRelayRecipient_init(trustedForwarderAddress);
-        __Ownable_init();
-    }
-
-    /**
-     * return the sender of this call.
-     * if the call came through our Relay Hub, return the original sender.
-     * should be used in the contract anywhere instead of msg.sender
-     */
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
-        returns (address sender)
-    {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
-    }
-
-    // #################################################################
+    uint256 public prevBlock;
 
     function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
         require(isRootMaintainer != rootMaintainer, "ISC");
@@ -105,13 +57,12 @@ contract AbstractChainOfTrustBaseUpgradeable is
         address memberAddress = _msgSender();
         groupDetail storage detail = group[memberAddress];
         require(_checkChainOfTrustByExpiration(detail.gId), "MIRC");
-        address didAddress = _computeAddress(did);
-        detail.didAddress = didAddress;
+        detail.did = did;
         emit DidChanged(memberAddress, did, prevBlock);
         prevBlock = block.number;
     }
 
-    function transferRoot(address newRootManager) external {
+    function transferRoot(address newRootManager, string memory did) external {
         address executor = _msgSender();
         address rootManager = manager[1];
         require((executor == rootManager || executor == owner()), "NA");
@@ -120,8 +71,8 @@ contract AbstractChainOfTrustBaseUpgradeable is
         manager[1] = newRootManager;
         groupDetail storage t = group[rootManager];
         newGroup.gId = t.gId;
-        newGroup.didAddress = t.didAddress;
-        t.didAddress = address(0);
+        newGroup.did = did;
+        t.did = "";
         t.gId = 0;
         emit RootManagerUpdated(executor, rootManager, newRootManager);
     }
@@ -134,8 +85,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
         groupDetail storage gd = group[entityManager];
         gd.gId = gId;
         manager[gId] = entityManager;
-        address didAddr = _computeAddress(did);
-        gd.didAddress = didAddr;
+        gd.did = did;
         emit DidChanged(entityManager, did, prevBlock);
         prevBlock = block.number;
     }
@@ -281,7 +231,8 @@ contract AbstractChainOfTrustBaseUpgradeable is
         address memberEntity
     ) private view {
         require(
-            _computeAddress(memberDid) == group[memberEntity].didAddress,
+            _computeAddress(memberDid) ==
+                _computeAddress(group[memberEntity].did),
             "DDM"
         );
     }
@@ -381,7 +332,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
     ) external view returns (MemberProfile memory member) {
         uint256 memberGId = group[memberEntityManager].gId;
         member.gId = memberGId;
-        member.didAddress = group[memberEntityManager].didAddress;
+        member.did = group[memberEntityManager].did;
         if (memberGId == 1) {
             member.isValid = true;
             return member;
@@ -395,6 +346,54 @@ contract AbstractChainOfTrustBaseUpgradeable is
     }
 
     // #################################################################
+
+    function __AbstractChainOfTrustBaseUpgradeable_init(
+        address trustedForwarderAddress,
+        uint8 chainDepth,
+        string memory did,
+        address rootEntityManager,
+        uint8 revokeMode,
+        bool rootMaintainer
+    ) internal onlyInitializing {
+        depth = chainDepth;
+        memberCounter++;
+        revokeConfigMode = revokeMode;
+        _configMember(memberCounter, did, rootEntityManager);
+        isRootMaintainer = rootMaintainer;
+        __AbstractChainOfTrustBaseUpgradeable_init_unchained(
+            trustedForwarderAddress
+        );
+    }
+
+    function __AbstractChainOfTrustBaseUpgradeable_init_unchained(
+        address trustedForwarderAddress
+    ) internal onlyInitializing {
+        __BaseRelayRecipient_init(trustedForwarderAddress);
+        __Ownable_init();
+    }
+
+    /**
+     * return the sender of this call.
+     * if the call came through our Relay Hub, return the original sender.
+     * should be used in the contract anywhere instead of msg.sender
+     */
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
+        returns (address sender)
+    {
+        bytes memory bytesSender;
+        bool success;
+        (success, bytesSender) = trustedForwarder.staticcall(
+            abi.encodeWithSignature("getMsgSender()")
+        );
+
+        require(success, "SCF");
+
+        return abi.decode(bytesSender, (address));
+    }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

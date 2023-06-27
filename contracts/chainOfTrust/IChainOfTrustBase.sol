@@ -5,7 +5,7 @@ pragma solidity 0.8.18;
 interface IChainOfTrustBase {
     struct groupDetail {
         uint256 gId;
-        address didAddress;
+        string did;
     }
 
     struct MemberProfile {
@@ -13,7 +13,7 @@ interface IChainOfTrustBase {
         uint256 exp;
         uint256 gId;
         address trustedBy;
-        address didAddress;
+        string did;
         bool isValid;
     }
 
@@ -87,8 +87,11 @@ interface IChainOfTrustBase {
 
     /**
      * @dev Only current root manager or contract owner can transfer root manager
+     * @param newRootManager: The account to be the new root manager
+     * @param did: The did in which the root manager is associated to in some kind of relationship.
+     * The chosen relationship is up to the application layer.
      */
-    function transferRoot(address newRootManager) external;
+    function transferRoot(address newRootManager, string memory did) external;
 
     function updateMaintainerMode(bool rootMaintainer) external;
 
