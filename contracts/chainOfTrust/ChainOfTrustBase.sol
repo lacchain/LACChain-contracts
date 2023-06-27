@@ -72,7 +72,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         prevBlock = block.number;
     }
 
-    function transferRoot(address newRootManager) external {
+    function transferRoot(address newRootManager, string memory did) external {
         address executor = _msgSender();
         address rootManager = manager[1];
         require((executor == rootManager || executor == owner()), "NA");
@@ -81,7 +81,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         manager[1] = newRootManager;
         groupDetail storage t = group[rootManager];
         newGroup.gId = t.gId;
-        newGroup.did = t.did;
+        newGroup.did = did;
         t.did = "";
         t.gId = 0;
         emit RootManagerUpdated(executor, rootManager, newRootManager);

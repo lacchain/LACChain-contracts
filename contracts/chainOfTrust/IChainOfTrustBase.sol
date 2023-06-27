@@ -87,8 +87,11 @@ interface IChainOfTrustBase {
 
     /**
      * @dev Only current root manager or contract owner can transfer root manager
+     * @param newRootManager: The account to be the new root manager
+     * @param did: The did in which the root manager is associated to in some kind of relationship.
+     * The chosen relationship is up to the application layer.
      */
-    function transferRoot(address newRootManager) external;
+    function transferRoot(address newRootManager, string memory did) external;
 
     function updateMaintainerMode(bool rootMaintainer) external;
 

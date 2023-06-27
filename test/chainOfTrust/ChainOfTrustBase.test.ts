@@ -914,7 +914,9 @@ describe(artifactName, function () {
       const A0 = await ethers.getContractFactory(artifactName, rootManager);
       const c0 = A0.attach(contractAddress);
       const newRootManager = member1;
-      const tx = await c0.transferRoot(newRootManager.address);
+      const newDid =
+        "did:lac1:1iT6MJp1qexjKDsUDKn9awVAUdDdJsqzgrrzEiFdDq5tPB7P2vZswz6hrjZFRWY1jVjE";
+      const tx = await c0.transferRoot(newRootManager.address, newDid);
       await tx.wait();
       expect(tx)
         .to.emit(c0, "RootManagerUpdated")
@@ -926,7 +928,7 @@ describe(artifactName, function () {
       const newRootManagerGroup = await c0.group(newRootManager.address);
       expect(newRootManagerGroup.gId).to.eq(1);
       // const didAddress = getAddressFromDid(did);
-      expect(newRootManagerGroup.did).to.equal(did);
+      expect(newRootManagerGroup.did).to.equal(newDid);
     });
     it("Should transfer root manager by contract owner", async () => {
       const rootManagerAddress = rootManager.address;
@@ -943,7 +945,9 @@ describe(artifactName, function () {
       const A0 = await ethers.getContractFactory(artifactName, owner);
       const c0 = A0.attach(contractAddress);
       const newRootManager = member1;
-      const tx = await c0.transferRoot(newRootManager.address);
+      const newDid =
+        "did:lac1:1iT6MJp1qexjKDsUDKn9awVAUdDdJsqzgrrzEiFdDq5tPB7P2vZswz6hrjZFRWY1jVjE";
+      const tx = await c0.transferRoot(newRootManager.address, newDid);
       await tx.wait();
       expect(tx)
         .to.emit(c0, "RootManagerUpdated")
@@ -964,13 +968,15 @@ describe(artifactName, function () {
       const A0 = await ethers.getContractFactory(artifactName, owner);
       const c0 = A0.attach(contractAddress);
       const newRootManager = member1;
-      const tx = await c0.transferRoot(newRootManager.address);
+      const newDid =
+        "did:lac1:1iT6MJp1qexjKDsUDKn9awVAUdDdJsqzgrrzEiFdDq5tPB7P2vZswz6hrjZFRWY1jVjE";
+      const tx = await c0.transferRoot(newRootManager.address, newDid);
       await tx.wait();
       const attacker = member2;
       const A1 = await ethers.getContractFactory(artifactName, attacker);
       const c1 = A1.attach(contractAddress);
       try {
-        const tx1 = await c1.transferRoot(attacker.address);
+        const tx1 = await c1.transferRoot(attacker.address, newDid); // assuming the attacker want to use the same did but trying to change the manager address.
         await tx1.wait();
       } catch (e: any) {
         return;
@@ -992,19 +998,21 @@ describe(artifactName, function () {
       const A0 = await ethers.getContractFactory(artifactName, owner);
       const c0 = A0.attach(contractAddress);
       const newRootManager = member1;
-      const tx = await c0.transferRoot(newRootManager.address);
+      const newDid =
+        "did:lac1:1iT6MJp1qexjKDsUDKn9awVAUdDdJsqzgrrzEiFdDq5tPB7P2vZswz6hrjZFRWY1jVjE";
+      const tx = await c0.transferRoot(newRootManager.address, newDid);
       await tx.wait();
       const A1 = await ethers.getContractFactory(artifactName, rootManager);
       const c1 = A1.attach(contractAddress);
       try {
-        const tx1 = await c1.transferRoot(member3.address);
+        const tx1 = await c1.transferRoot(member3.address, did); // the old root manager tries to recover its privilege
         await tx1.wait();
       } catch (e: any) {
         return;
       }
       throw new Error("Should have thrown an error");
     });
-    it("Should throw if candidate to root manager already exists", async () => {
+    it("New root manager should be able to add new members", async () => {
       const rootManagerAddress = rootManager.address;
       const depth = 3; // max depth
       const revokeMode = 2; // root and parent can revoke
@@ -1019,7 +1027,9 @@ describe(artifactName, function () {
       const A0 = await ethers.getContractFactory(artifactName, owner);
       const c0 = A0.attach(contractAddress);
       const newRootManager = member1;
-      const tx = await c0.transferRoot(newRootManager.address);
+      const newDid =
+        "did:lac1:1iT6MJp1qexjKDsUDKn9awVAUdDdJsqzgrrzEiFdDq5tPB7P2vZswz6hrjZFRWY1jVjE";
+      const tx = await c0.transferRoot(newRootManager.address, newDid);
       await tx.wait();
       const A1 = await ethers.getContractFactory(artifactName, newRootManager);
       const c1 = A1.attach(contractAddress);
