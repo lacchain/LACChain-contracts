@@ -30,6 +30,7 @@ Chain of Trust smart contract is part of a stack of contracts that comprise Chai
   - Maintainer Resposibilities are:
     - update the "depth" parameter (that represents the maximum depth)
     - update the "revocation mode" parameter
+    - Transfer Root
   - Base Resposibilities are:
     - Handle Upgrades.
     - Handle the ownership of the contract
@@ -55,6 +56,6 @@ In the following diagram depth=3 is exemplified
 
 <img src="../img/CoT.png" width="1100">
 
-In the following diagram different groups are added in the same level, this shows how different entities endorses trust at different levels.
+In the following diagram different groups are added at the same level, this shows how different entities endorse trust at different levels.
 
 <img src="../img/CoT-levels-groups.png" width="1100">
