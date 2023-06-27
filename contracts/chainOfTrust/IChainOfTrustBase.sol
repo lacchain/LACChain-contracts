@@ -5,7 +5,7 @@ pragma solidity 0.8.18;
 interface IChainOfTrustBase {
     struct groupDetail {
         uint256 gId;
-        address didAddress;
+        string did;
     }
 
     struct MemberProfile {
@@ -13,7 +13,7 @@ interface IChainOfTrustBase {
         uint256 exp;
         uint256 gId;
         address trustedBy;
-        address didAddress;
+        string did;
         bool isValid;
     }
 

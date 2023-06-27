@@ -7,23 +7,6 @@ import "./IChainOfTrustBase.sol";
 import "../utils/Ownable.sol";
 
 contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
-    uint256 public memberCounter;
-    // entityManager => (gId, didAddress)
-    mapping(address => groupDetail) public group;
-    // gId => entityManager
-    mapping(uint256 => address) public manager;
-
-    // gIdParent => gIdMember  => groupMemberDetail
-    mapping(uint256 => mapping(uint256 => MemberDetail)) public trustedList;
-
-    mapping(uint256 => uint256) public trustedBy;
-
-    uint8 public depth;
-    uint8 public revokeConfigMode;
-    bool public isRootMaintainer;
-    uint8 public constant ROOTANDPARENT = 1;
-    uint8 public constant ALLANCESTORS = 2;
-
     constructor(
         address trustedForwarderAddress,
         uint8 chainDepth,
@@ -38,6 +21,23 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         _configMember(memberCounter, did, rootEntityManager);
         isRootMaintainer = rootMaintainer;
     }
+
+    uint256 public memberCounter;
+    // entityManager => (gId, did)
+    mapping(address => groupDetail) public group;
+    // gId => entityManager
+    mapping(uint256 => address) public manager;
+
+    // gIdParent => gIdMember  => groupMemberDetail
+    mapping(uint256 => mapping(uint256 => MemberDetail)) public trustedList;
+
+    mapping(uint256 => uint256) public trustedBy;
+
+    uint8 public depth;
+    uint8 public revokeConfigMode;
+    bool public isRootMaintainer;
+    uint8 public constant ROOTANDPARENT = 1;
+    uint8 public constant ALLANCESTORS = 2;
 
     uint256 public prevBlock;
 
@@ -67,8 +67,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         address memberAddress = _msgSender();
         groupDetail storage detail = group[memberAddress];
         require(_checkChainOfTrustByExpiration(detail.gId), "MIRC");
-        address didAddress = _computeAddress(did);
-        detail.didAddress = didAddress;
+        detail.did = did;
         emit DidChanged(memberAddress, did, prevBlock);
         prevBlock = block.number;
     }
@@ -82,8 +81,8 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         manager[1] = newRootManager;
         groupDetail storage t = group[rootManager];
         newGroup.gId = t.gId;
-        newGroup.didAddress = t.didAddress;
-        t.didAddress = address(0);
+        newGroup.did = t.did;
+        t.did = "";
         t.gId = 0;
         emit RootManagerUpdated(executor, rootManager, newRootManager);
     }
@@ -96,8 +95,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         groupDetail storage gd = group[entityManager];
         gd.gId = gId;
         manager[gId] = entityManager;
-        address didAddr = _computeAddress(did);
-        gd.didAddress = didAddr;
+        gd.did = did;
         emit DidChanged(entityManager, did, prevBlock);
         prevBlock = block.number;
     }
@@ -243,7 +241,8 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         address memberEntity
     ) private view {
         require(
-            _computeAddress(memberDid) == group[memberEntity].didAddress,
+            _computeAddress(memberDid) ==
+                _computeAddress(group[memberEntity].did),
             "DDM"
         );
     }
@@ -343,7 +342,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
     ) external view returns (MemberProfile memory member) {
         uint256 memberGId = group[memberEntityManager].gId;
         member.gId = memberGId;
-        member.didAddress = group[memberEntityManager].didAddress;
+        member.did = group[memberEntityManager].did;
         if (memberGId == 1) {
             member.isValid = true;
             return member;

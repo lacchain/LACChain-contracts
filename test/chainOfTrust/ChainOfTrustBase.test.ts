@@ -42,8 +42,8 @@ describe(artifactName, function () {
       const contract = Artifact.attach(contractAddress);
       expect(await contract.depth()).to.equal(3);
       const t = await contract.group(rootManagerAddress);
-      const didAddress = getAddressFromDid(did);
-      expect(t.didAddress.substring(2).toLowerCase()).to.equal(didAddress);
+      // const didAddress = getAddressFromDid(did);
+      expect(t.did).to.equal(did);
     });
     it("Should set right values on adding a new member", async () => {
       const memberDid =
@@ -67,8 +67,8 @@ describe(artifactName, function () {
       );
       await sleep(2);
       const t = await contract.group(memberAddress);
-      const didAddress = getAddressFromDid(memberDid);
-      expect(t.didAddress.substring(2).toLowerCase()).to.equal(didAddress);
+      // const didAddress = getAddressFromDid(memberDid);
+      expect(t.did).to.equal(memberDid);
       await expect(result)
         .to.emit(contract, "DidChanged")
         .withArgs(memberAddress, memberDid, anyValue);
@@ -925,10 +925,8 @@ describe(artifactName, function () {
         );
       const newRootManagerGroup = await c0.group(newRootManager.address);
       expect(newRootManagerGroup.gId).to.eq(1);
-      const didAddress = getAddressFromDid(did);
-      expect(
-        newRootManagerGroup.didAddress.substring(2).toLowerCase()
-      ).to.equal(didAddress);
+      // const didAddress = getAddressFromDid(did);
+      expect(newRootManagerGroup.did).to.equal(did);
     });
     it("Should transfer root manager by contract owner", async () => {
       const rootManagerAddress = rootManager.address;
@@ -1035,8 +1033,8 @@ describe(artifactName, function () {
       );
       await result.wait();
       const t = await c1.group(memberAddress);
-      const didAddress = getAddressFromDid(memberDid);
-      expect(t.didAddress.substring(2).toLowerCase()).to.equal(didAddress);
+      // const didAddress = getAddressFromDid(memberDid);
+      expect(t.did).to.equal(memberDid);
       await expect(result)
         .to.emit(c1, "DidChanged")
         .withArgs(memberAddress, memberDid, anyValue);
