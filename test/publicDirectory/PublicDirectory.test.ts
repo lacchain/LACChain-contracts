@@ -81,11 +81,13 @@ describe(artifactName, function () {
           anyValue,
           anyValue
         );
-      const memberDetails = (
-        await publicDirectoryInstance.getMemberDetails(did)
-      ).memberData;
-      expect(memberDetails.expires).to.equal(expires);
-      expect(memberDetails.exp).to.equal(exp);
+      const fullMemberDetails = await publicDirectoryInstance.getMemberDetails(
+        did
+      );
+      const retrievedMemberData = fullMemberDetails.memberData;
+      expect(retrievedMemberData.expires).to.equal(expires);
+      expect(retrievedMemberData.exp).to.equal(exp);
+      expect(fullMemberDetails.lastBlockChange).to.greaterThan(0);
     });
     it("Should fail on attempting to update a member who is not registered", async function () {
       try {
@@ -386,12 +388,13 @@ async function addMember(member: IPublicDirectory.SetMemberStruct) {
       anyValue,
       anyValue
     );
-  const memberDetails = (await publicDirectoryInstance.getMemberDetails(did))
-    .memberData;
-  expect(memberDetails.expires).to.equal(expires);
-  expect(memberDetails.exp).to.equal(expValueToVerify);
-  const prevBlock = await publicDirectoryInstance.prevBlock();
-  expect(prevBlock).to.be.greaterThan(0);
+  const fullMemberDetails = await publicDirectoryInstance.getMemberDetails(did);
+  const retrievedMemberData = fullMemberDetails.memberData;
+  expect(retrievedMemberData.expires).to.equal(expires);
+  expect(retrievedMemberData.exp).to.equal(expValueToVerify);
+  expect(fullMemberDetails.lastBlockChange).to.greaterThan(0);
+  const contractPrevBlock = await publicDirectoryInstance.contractPrevBlock();
+  expect(contractPrevBlock).to.be.greaterThan(0);
 }
 
 async function _addMember(
