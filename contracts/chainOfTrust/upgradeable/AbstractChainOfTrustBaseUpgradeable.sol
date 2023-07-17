@@ -35,6 +35,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
         require(isRootMaintainer != rootMaintainer, "ISC");
         isRootMaintainer = rootMaintainer;
         emit MaintainerModeChanged(isRootMaintainer, prevBlock);
+        _emitContractBlockChangeIfNeeded();
     }
 
     function updateDepth(uint8 chainDepth) external {
@@ -42,6 +43,12 @@ contract AbstractChainOfTrustBaseUpgradeable is
         uint8 prevDepth = depth;
         depth = chainDepth;
         emit DepthChanged(prevDepth, depth, prevBlock);
+        _emitContractBlockChangeIfNeeded();
+    }
+
+    function _emitContractBlockChangeIfNeeded() private {
+        if (prevBlock == block.number) return;
+        emit ContractChange(prevBlock);
         prevBlock = block.number;
     }
 
@@ -50,7 +57,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
         uint8 prevRevokeMode = revokeConfigMode;
         revokeConfigMode = revokeMode;
         emit RevokeModeChanged(prevRevokeMode, revokeMode, prevBlock);
-        prevBlock = block.number;
+        _emitContractBlockChangeIfNeeded();
     }
 
     function updateDid(string memory did) external {
@@ -59,7 +66,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
         require(_checkChainOfTrustByExpiration(detail.gId), "MIRC");
         detail.did = did;
         emit DidChanged(memberAddress, did, prevBlock);
-        prevBlock = block.number;
+        _emitContractBlockChangeIfNeeded();
     }
 
     function transferRoot(address newRootManager, string memory did) external {
@@ -75,6 +82,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
         t.did = "";
         t.gId = 0;
         emit RootManagerUpdated(executor, rootManager, newRootManager);
+        _emitContractBlockChangeIfNeeded();
     }
 
     function _configMember(
@@ -87,7 +95,6 @@ contract AbstractChainOfTrustBaseUpgradeable is
         manager[gId] = entityManager;
         gd.did = did;
         emit DidChanged(entityManager, did, prevBlock);
-        prevBlock = block.number;
     }
 
     function addOrUpdateGroupMember(
@@ -174,7 +181,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
             currentTime,
             prevBlock
         );
-        prevBlock = block.number;
+        _emitContractBlockChangeIfNeeded();
     }
 
     function _getTimestamp() private view returns (uint256 timestamp) {
@@ -223,7 +230,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
             exp,
             prevBlock
         );
-        prevBlock = block.number;
+        _emitContractBlockChangeIfNeeded();
     }
 
     function _validateDidMatch(
@@ -360,6 +367,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
         revokeConfigMode = revokeMode;
         _configMember(memberCounter, did, rootEntityManager);
         isRootMaintainer = rootMaintainer;
+        _emitContractBlockChangeIfNeeded();
         __AbstractChainOfTrustBaseUpgradeable_init_unchained(
             trustedForwarderAddress
         );

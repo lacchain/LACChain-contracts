@@ -122,4 +122,10 @@ interface IChainOfTrustBase {
     function getMemberDetailsByEntityManager(
         address memberEntityManager
     ) external view returns (MemberProfile memory member);
+
+    /**
+     * @dev On emitted indicates the previous block number at which some change occurred on this smart contract
+     * @param contractPrevBlock The immediately previous block number at which at least one change occurred
+     */
+    event ContractChange(uint256 contractPrevBlock);
 }
