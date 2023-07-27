@@ -2,11 +2,10 @@
 
 pragma solidity 0.8.18;
 
-import "./SafeMath.sol";
-import "./IDIDRegistry.sol";
-import "../common/BaseRelayRecipient.sol";
+import "../SafeMath.sol";
+import "../IDIDRegistry.sol";
 
-contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
+contract DIDRegistry is IDIDRegistry {
     using SafeMath for uint256;
 
     mapping(address => address[]) public controllers;
@@ -18,12 +17,10 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
     mapping(address => uint) public changed;
     mapping(address => uint) public nonce;
 
-    uint private minKeyRotationTime;
+    uint public minKeyRotationTime;
+    uint16 public constant version = 1;
 
-    constructor(
-        uint _minKeyRotationTime,
-        address trustedForwarderAddr
-    ) BaseRelayRecipient(trustedForwarderAddr) {
+    constructor(uint _minKeyRotationTime) {
         minKeyRotationTime = _minKeyRotationTime;
     }
 
@@ -180,21 +177,21 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address identity,
         address controller
     ) external override {
-        addController(identity, _msgSender(), controller);
+        addController(identity, msg.sender, controller);
     }
 
     function removeController(
         address identity,
         address controller
     ) external override {
-        removeController(identity, _msgSender(), controller);
+        removeController(identity, msg.sender, controller);
     }
 
     function changeController(
         address identity,
         address newController
     ) external override {
-        changeController(identity, _msgSender(), newController);
+        changeController(identity, msg.sender, newController);
     }
 
     function changeControllerSigned(
@@ -251,7 +248,7 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         bytes memory value,
         uint validity
     ) external override {
-        setAttribute(identity, _msgSender(), name, value, validity);
+        setAttribute(identity, msg.sender, name, value, validity);
     }
 
     function setAttributeSigned(
@@ -321,7 +318,7 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
     ) external override {
         revokeAttribute(
             identity,
-            _msgSender(),
+            msg.sender,
             name,
             value,
             revokeDeltaTime,
@@ -367,11 +364,11 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address identity,
         uint keyRotationTime
     ) external override {
-        enableKeyRotation(identity, _msgSender(), keyRotationTime);
+        enableKeyRotation(identity, msg.sender, keyRotationTime);
     }
 
     function disableKeyRotation(address identity) external override {
-        disableKeyRotation(identity, _msgSender());
+        disableKeyRotation(identity, msg.sender);
     }
 
     function validDelegate(
@@ -425,7 +422,7 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
         address delegate,
         uint validity
     ) public {
-        addDelegate(identity, _msgSender(), delegateType, delegate, validity);
+        addDelegate(identity, msg.sender, delegateType, delegate, validity);
     }
 
     function addDelegateSigned(
@@ -501,7 +498,7 @@ contract DIDRegistry is IDIDRegistry, BaseRelayRecipient {
     ) public {
         revokeDelegate(
             identity,
-            _msgSender(),
+            msg.sender,
             delegateType,
             delegate,
             revokeDeltaTime,

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers, lacchain } from "hardhat";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
-import { getAddressFromDid, sleep } from "../util";
+import { sleep } from "../util";
 import { deployDidRegistry } from "../identity/Identity.test";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
@@ -49,8 +49,7 @@ describe(artifactName, function () {
       const contract = Artifact.attach(contractAddress);
       expect(await contract.depth()).to.equal(3);
       const t = await contract.group(rootManagerAddress);
-      const didAddress = getAddressFromDid(did);
-      expect(t.didAddress.substring(2).toLowerCase()).to.equal(didAddress);
+      expect(t.did).to.equal(did);
     });
 
     it("Should update a member in my Group (TL) by delegate", async () => {
