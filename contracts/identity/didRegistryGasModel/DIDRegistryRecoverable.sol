@@ -3,9 +3,9 @@
 pragma solidity 0.8.18;
 
 import "./DIDRegistry.sol";
-import "./SafeMath.sol";
+import "../SafeMath.sol";
 
-contract DIDRegistryRecoverable is DIDRegistry {
+contract DIDRegistryRecoverableGM is DIDRegistryGM {
     uint private maxAttempts;
     uint private minControllers;
     uint private resetSeconds;
@@ -17,7 +17,7 @@ contract DIDRegistryRecoverable is DIDRegistry {
         uint _minControllers,
         uint _resetSeconds,
         address trustedForwarderAddr
-    ) DIDRegistry(_minKeyRotationTime, trustedForwarderAddr) {
+    ) DIDRegistryGM(_minKeyRotationTime, trustedForwarderAddr) {
         maxAttempts = _maxAttempts;
         minControllers = _minControllers;
         resetSeconds = _resetSeconds;

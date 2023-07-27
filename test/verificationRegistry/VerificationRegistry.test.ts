@@ -2,7 +2,7 @@ import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers, lacchain, network } from "hardhat";
 import { keccak256, toUtf8Bytes } from "ethers/lib/utils";
-import { DIDRegistry } from "../../typechain-types";
+import { DIDRegistryGM } from "../../typechain-types";
 import { Wallet } from "ethers";
 import { defaultAbiCoder } from "ethers/lib/utils";
 import { arrayify } from "@ethersproject/bytes";
@@ -10,7 +10,7 @@ import { arrayify } from "@ethersproject/bytes";
 const artifactName = "VerificationRegistry";
 const [deployer, entity1, entity2, entity3] = lacchain.getSigners();
 let verificationRegistryAddress: string;
-let defaultDidRegistryInstance: DIDRegistry;
+let defaultDidRegistryInstance: DIDRegistryGM;
 const genericMessage = "some message";
 const didRegistryArtifactName = "DIDRegistry";
 const defaultDelegateType =
@@ -19,7 +19,7 @@ const EIP712ContractName = "VerificationRegistry";
 describe(artifactName, function () {
   async function deployDidRegistry(
     keyRotationTime = 3600
-  ): Promise<DIDRegistry> {
+  ): Promise<DIDRegistryGM> {
     const Artifact = await ethers.getContractFactory(
       didRegistryArtifactName,
       deployer

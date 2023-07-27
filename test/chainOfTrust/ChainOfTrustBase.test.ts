@@ -1,7 +1,7 @@
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers, lacchain } from "hardhat";
-import { getAddressFromDid, sleep } from "../util";
+import { sleep } from "../util";
 
 const artifactName = "ChainOfTrustBase";
 describe(artifactName, function () {
