@@ -12,6 +12,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
     IChainOfTrustBase
 {
     // #################################################################
+    uint16 public constant version = 1;
     uint256 public memberCounter;
     // entityManager => (gId, did)
     mapping(address => groupDetail) public group;

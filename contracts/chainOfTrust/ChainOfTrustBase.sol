@@ -23,6 +23,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         _emitContractBlockChangeIfNeeded();
     }
 
+    uint16 public constant version = 1;
     uint256 public memberCounter;
     // entityManager => (gId, did)
     mapping(address => groupDetail) public group;
