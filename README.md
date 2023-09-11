@@ -1,4 +1,4 @@
-# LACPass Smart Contracts
+# LACChain Trust Smart Contracts
 
 ## Getting Started
 
