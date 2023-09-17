@@ -4,7 +4,7 @@ pragma solidity 0.8.18;
 
 import "../SafeMath.sol";
 import "../IDIDRegistry.sol";
-import "../../common/BaseRelayRecipient.sol";
+import "../../../common/BaseRelayRecipient.sol";
 
 contract DIDRegistryGM is IDIDRegistry, BaseRelayRecipient {
     using SafeMath for uint256;
