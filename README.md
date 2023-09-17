@@ -13,3 +13,5 @@
 - [Public Directory](docs/functional/publicDirectory.md)
 
 ## License
+
+<strong>[APACHE License 2.0](./LICENSE.md)</strong>
