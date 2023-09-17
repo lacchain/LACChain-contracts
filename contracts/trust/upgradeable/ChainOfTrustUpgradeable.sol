@@ -3,7 +3,7 @@ pragma solidity 0.8.18;
 
 import "./AbstractChainOfTrustBaseUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../../utils/upgradeable/IdentityHandlerUpgradeable.sol";
+import "../../common/upgradeable/IdentityHandlerUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract ChainOfTrustUpgradeable is

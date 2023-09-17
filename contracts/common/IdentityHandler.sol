@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../common/BaseRelayRecipient.sol";
+import "./BaseRelayRecipient.sol";
 import "./IIdentityHandler.sol";
-import "./EIP712/EIP712.sol";
+import "../utils/EIP712/EIP712.sol";
 
 abstract contract IdentityHandler is
     IIdentityHandler,

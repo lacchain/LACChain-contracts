@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../utils/IdentityHandler.sol";
+import "../common/IdentityHandler.sol";
 import "./ChainOfTrustBase.sol";
 import "./IChainOfTrust.sol";
 
