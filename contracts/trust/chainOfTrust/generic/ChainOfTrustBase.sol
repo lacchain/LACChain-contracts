@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../common/BaseRelayRecipient.sol";
-import "./IChainOfTrustBase.sol";
+import "../../../common/BaseRelayRecipient.sol";
+import "../IChainOfTrustBase.sol";
 
-import "../utils/Ownable.sol";
+import "../../../utils/Ownable.sol";
 
 contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
     constructor(
-        address trustedForwarderAddress,
         uint8 chainDepth,
         string memory did,
         address rootEntityManager,
         uint8 revokeMode,
         bool rootMaintainer
-    ) BaseRelayRecipient(trustedForwarderAddress) {
+    ) {
         depth = chainDepth;
         memberCounter++;
         revokeConfigMode = revokeMode;
@@ -58,7 +57,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         _emitContractBlockChangeIfNeeded();
     }
 
-    function _emitContractBlockChangeIfNeeded() private {
+    function _emitContractBlockChangeIfNeeded() internal {
         if (prevBlock == block.number) return;
         emit ContractChange(prevBlock);
         prevBlock = block.number;
@@ -101,7 +100,7 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         uint256 gId,
         string memory did,
         address entityManager
-    ) private {
+    ) internal {
         groupDetail storage gd = group[entityManager];
         gd.gId = gId;
         manager[gId] = entityManager;
