@@ -3,13 +3,13 @@ pragma solidity 0.8.18;
 
 import "../../../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
 import "../../IChainOfTrustBase.sol";
-import "../../generic/upgradeable/AbstractCoreChainOfTrustUpgradeable.sol";
+import "../../generic/upgradeable/AbstractChainOfTrustUpgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract AbstractChainOfTrustGMUpgradeable is
     BaseRelayRecipientUpgradeable,
-    AbstractCoreChainOfTrustUpgradeable
+    AbstractChainOfTrustUpgradeable
 {
     function __AbstractChainOfTrustGMUpgradeable_init(
         address trustedForwarderAddress,
@@ -47,18 +47,20 @@ contract AbstractChainOfTrustGMUpgradeable is
         internal
         view
         virtual
-        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
+        override(BaseRelayRecipientUpgradeable, AbstractChainOfTrustUpgradeable)
         returns (address sender)
     {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
+        return BaseRelayRecipientUpgradeable._msgSender();
+    }
 
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, AbstractChainOfTrustUpgradeable)
+        returns (bytes calldata)
+    {
+        return ContextUpgradeable._msgData();
     }
 
     /**

@@ -99,6 +99,26 @@ contract ChainOfTrustUpgradeable is
         _revokeMemberByAnyAncestor(ancestor, memberEntity, did);
     }
 
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, AbstractChainOfTrustUpgradeable)
+        returns (address)
+    {
+        return ContextUpgradeable._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, AbstractChainOfTrustUpgradeable)
+        returns (bytes calldata)
+    {
+        return ContextUpgradeable._msgData();
+    }
+
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}

@@ -112,15 +112,17 @@ contract ChainOfTrustGMUpgradeable is
         override(AbstractChainOfTrustGMUpgradeable, ContextUpgradeable)
         returns (address sender)
     {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
+        return AbstractChainOfTrustGMUpgradeable._msgSender();
+    }
 
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
+    function _msgData()
+        internal
+        view
+        virtual
+        override(AbstractChainOfTrustGMUpgradeable, ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return ContextUpgradeable._msgData();
     }
 
     function _authorizeUpgrade(

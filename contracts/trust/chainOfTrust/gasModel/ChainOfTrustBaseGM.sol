@@ -32,17 +32,9 @@ contract ChainOfTrustBaseGM is ChainOfTrustBase, BaseRelayRecipient {
         internal
         view
         virtual
-        override(BaseRelayRecipient, Context)
+        override(ChainOfTrustBase, BaseRelayRecipient)
         returns (address sender)
     {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
+        return BaseRelayRecipient._msgSender();
     }
 }

@@ -38,15 +38,17 @@ contract ChainOfTrustGM is ChainOfTrustBaseGM, IdentityHandler, IChainOfTrust {
         override(ChainOfTrustBaseGM, Context)
         returns (address sender)
     {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
+        return ChainOfTrustBaseGM._msgSender();
+    }
 
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ChainOfTrustBase)
+        returns (bytes calldata)
+    {
+        return Context._msgData();
     }
 
     function addOrUpdateGroupMemberByDelegate(

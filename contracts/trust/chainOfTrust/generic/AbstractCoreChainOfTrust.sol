@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../../../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
-import "../../IChainOfTrustBase.sol";
+import "../IChainOfTrustBase.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../../../utils/Owner.sol";
+import "../../../utils/Ctx.sol";
 
-contract AbstractCoreChainOfTrustUpgradeable is
-    OwnableUpgradeable,
-    IChainOfTrustBase
-{
+abstract contract AbstractCoreChainOfTrust is Owner, Ctx, IChainOfTrustBase {
     // ########################################################################################## //
     function _initVars(
         uint8 chainDepth,
@@ -46,7 +43,8 @@ contract AbstractCoreChainOfTrustUpgradeable is
 
     uint256 public prevBlock;
 
-    function updateMaintainerMode(bool rootMaintainer) external onlyOwner {
+    function updateMaintainerMode(bool rootMaintainer) external {
+        _checkOwner();
         require(isRootMaintainer != rootMaintainer, "ISC");
         isRootMaintainer = rootMaintainer;
         emit MaintainerModeChanged(isRootMaintainer, prevBlock);
@@ -368,11 +366,11 @@ contract AbstractCoreChainOfTrustUpgradeable is
     }
 
     // ########################################################################################## //
-
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     * Since this class is the base one used for upgradeable and non-upgradeable versions a gap is used to allow contract extension.
      */
     uint256[45] private __gap;
 }
