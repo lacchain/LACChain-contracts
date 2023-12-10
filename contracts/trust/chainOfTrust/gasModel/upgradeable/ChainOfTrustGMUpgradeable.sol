@@ -1,14 +1,14 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./AbstractChainOfTrustBaseUpgradeable.sol";
+import "./AbstractChainOfTrustGMUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../../../../common/upgradeable/IdentityHandlerUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract ChainOfTrustUpgradeable is
+contract ChainOfTrustGMUpgradeable is
     Initializable,
-    AbstractChainOfTrustBaseUpgradeable,
+    AbstractChainOfTrustGMUpgradeable,
     IdentityHandlerUpgradeable,
     UUPSUpgradeable
 {
@@ -27,7 +27,7 @@ contract ChainOfTrustUpgradeable is
         address didRegistry,
         bytes32 delegateType
     ) public initializer {
-        __AbstractChainOfTrustBaseUpgradeable_init(
+        __AbstractChainOfTrustGMUpgradeable_init(
             trustedForwarderAddress,
             chainDepth,
             did,
@@ -109,7 +109,7 @@ contract ChainOfTrustUpgradeable is
     function _msgSender()
         internal
         view
-        override(AbstractChainOfTrustBaseUpgradeable, ContextUpgradeable)
+        override(AbstractChainOfTrustGMUpgradeable, ContextUpgradeable)
         returns (address sender)
     {
         bytes memory bytesSender;

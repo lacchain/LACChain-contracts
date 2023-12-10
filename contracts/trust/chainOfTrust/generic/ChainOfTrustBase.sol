@@ -14,6 +14,23 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         uint8 revokeMode,
         bool rootMaintainer
     ) {
+        _initVars(
+            chainDepth,
+            did,
+            rootEntityManager,
+            revokeMode,
+            rootMaintainer
+        );
+    }
+
+    // ########################################################################################## //
+    function _initVars(
+        uint8 chainDepth,
+        string memory did,
+        address rootEntityManager,
+        uint8 revokeMode,
+        bool rootMaintainer
+    ) internal {
         depth = chainDepth;
         memberCounter++;
         revokeConfigMode = revokeMode;
@@ -362,4 +379,5 @@ contract ChainOfTrustBase is Ownable, IChainOfTrustBase {
         member.iat = mDetail.iat;
         member.isValid = _validateMember(memberGId, depth + 1); // depth + 1 since actually root is one level even though it is level "0"
     }
+    // ########################################################################################## //
 }

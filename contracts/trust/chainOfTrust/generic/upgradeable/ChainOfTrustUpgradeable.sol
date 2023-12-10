@@ -1,13 +1,23 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../../../common/IdentityHandler.sol";
-import "./ChainOfTrustBase.sol";
-import "../IChainOfTrust.sol";
+import "./AbstractChainOfTrustUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../../../../common/upgradeable/IdentityHandlerUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract ChainOfTrustGM is ChainOfTrustBaseGM, IdentityHandler, IChainOfTrust {
-    constructor(
-        address trustedForwarderAddress,
+contract ChainOfTrustUpgradeable is
+    Initializable,
+    AbstractChainOfTrustUpgradeable,
+    IdentityHandlerUpgradeable,
+    UUPSUpgradeable
+{
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         uint8 chainDepth,
         string memory did,
         address rootEntityManager,
@@ -15,38 +25,16 @@ contract ChainOfTrustGM is ChainOfTrustBaseGM, IdentityHandler, IChainOfTrust {
         bool rootMaintainer,
         address didRegistry,
         bytes32 delegateType
-    )
-        ChainOfTrustBaseGM(
-            trustedForwarderAddress,
+    ) public initializer {
+        __AbstractChainOfTrustUpgradeable_init(
             chainDepth,
             did,
             rootEntityManager,
             revokeMode,
             rootMaintainer
-        )
-        IdentityHandler(didRegistry, delegateType, "ChainOfTrust")
-    {}
-
-    /**
-     * return the sender of this call.
-     * if the call came through our Relay Hub, return the original sender.
-     * should be used in the contract anywhere instead of msg.sender
-     */
-    function _msgSender()
-        internal
-        view
-        override(ChainOfTrustBaseGM, Context)
-        returns (address sender)
-    {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
         );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
+        __IdentityHandler_init(didRegistry, delegateType, "ChainOfTrust");
+        __UUPSUpgradeable_init();
     }
 
     function addOrUpdateGroupMemberByDelegate(
@@ -110,4 +98,8 @@ contract ChainOfTrustGM is ChainOfTrustBaseGM, IdentityHandler, IChainOfTrust {
         );
         _revokeMemberByAnyAncestor(ancestor, memberEntity, did);
     }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
 }

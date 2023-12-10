@@ -6,12 +6,26 @@ import "../../IChainOfTrustBase.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract AbstractChainOfTrustBaseUpgradeable is
-    BaseRelayRecipientUpgradeable,
+contract AbstractCoreChainOfTrustUpgradeable is
     OwnableUpgradeable,
     IChainOfTrustBase
 {
-    // #################################################################
+    // ########################################################################################## //
+    function _initVars(
+        uint8 chainDepth,
+        string memory did,
+        address rootEntityManager,
+        uint8 revokeMode,
+        bool rootMaintainer
+    ) internal {
+        depth = chainDepth;
+        memberCounter++;
+        revokeConfigMode = revokeMode;
+        _configMember(memberCounter, did, rootEntityManager);
+        isRootMaintainer = rootMaintainer;
+        _emitContractBlockChangeIfNeeded();
+    }
+
     uint16 public constant version = 1;
     uint256 public memberCounter;
     // entityManager => (gId, did)
@@ -90,7 +104,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
         uint256 gId,
         string memory did,
         address entityManager
-    ) private {
+    ) internal {
         groupDetail storage gd = group[entityManager];
         gd.gId = gId;
         manager[gId] = entityManager;
@@ -353,56 +367,7 @@ contract AbstractChainOfTrustBaseUpgradeable is
         member.isValid = _validateMember(memberGId, depth + 1); // depth + 1 since actually root is one level even though it is level "0"
     }
 
-    // #################################################################
-
-    function __AbstractChainOfTrustBaseUpgradeable_init(
-        address trustedForwarderAddress,
-        uint8 chainDepth,
-        string memory did,
-        address rootEntityManager,
-        uint8 revokeMode,
-        bool rootMaintainer
-    ) internal onlyInitializing {
-        depth = chainDepth;
-        memberCounter++;
-        revokeConfigMode = revokeMode;
-        _configMember(memberCounter, did, rootEntityManager);
-        isRootMaintainer = rootMaintainer;
-        _emitContractBlockChangeIfNeeded();
-        __AbstractChainOfTrustBaseUpgradeable_init_unchained(
-            trustedForwarderAddress
-        );
-    }
-
-    function __AbstractChainOfTrustBaseUpgradeable_init_unchained(
-        address trustedForwarderAddress
-    ) internal onlyInitializing {
-        __BaseRelayRecipient_init(trustedForwarderAddress);
-        __Ownable_init();
-    }
-
-    /**
-     * return the sender of this call.
-     * if the call came through our Relay Hub, return the original sender.
-     * should be used in the contract anywhere instead of msg.sender
-     */
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
-        returns (address sender)
-    {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
-    }
+    // ########################################################################################## //
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
