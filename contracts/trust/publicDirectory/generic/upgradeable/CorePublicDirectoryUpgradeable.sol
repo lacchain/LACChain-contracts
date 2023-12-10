@@ -2,57 +2,15 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
+import "../../../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
 
-import "../IPublicDirectory.sol";
+import "../../IPublicDirectory.sol";
 
-contract PublicDirectoryUpgradeable is
-    Initializable,
+contract CorePublicDirectoryUpgradeable is
     OwnableUpgradeable,
-    UUPSUpgradeable,
-    BaseRelayRecipientUpgradeable,
     IPublicDirectory
 {
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize(address trustedForwarderAddress) public initializer {
-        __BaseRelayRecipient_init(trustedForwarderAddress);
-        __Ownable_init();
-        __UUPSUpgradeable_init();
-    }
-
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
-
-    /**
-     * return the sender of this call.
-     * if the call came through our Relay Hub, return the original sender.
-     * should be used in the contract anywhere instead of msg.sender
-     */
-    function _msgSender()
-        internal
-        view
-        override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
-        returns (address sender)
-    {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
-    }
-
-    /***************** CORE METHODS **********************/
+    // ######################## CORE METHODS ######################################## //
     uint16 public constant version = 1;
     mapping(uint256 => member) public memberDetails;
     mapping(address => uint256) public id;
@@ -266,4 +224,13 @@ contract PublicDirectoryUpgradeable is
     function _validateMemberIdExists(uint256 memberId) private pure {
         require(memberId > 0, "DNR");
     }
+
+    // ########################################################################################## //
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[45] private __gap;
 }

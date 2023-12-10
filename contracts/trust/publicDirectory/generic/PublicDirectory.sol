@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./IPublicDirectory.sol";
-import "../utils/Ownable.sol";
+import "../IPublicDirectory.sol";
+import "../../../utils/Ownable.sol";
 
 contract PublicDirectory is IPublicDirectory, Ownable {
-    constructor(
-        address trustedForwarderAddress
-    ) BaseRelayRecipient(trustedForwarderAddress) {}
+    constructor() Ownable() {}
 
     uint16 public constant version = 1;
     mapping(uint256 => member) public memberDetails;
