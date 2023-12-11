@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "../../../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
@@ -10,7 +9,6 @@ import "./CorePublicDirectoryUpgradeable.sol";
 
 contract PublicDirectoryUpgradeable is
     Initializable,
-    OwnableUpgradeable,
     UUPSUpgradeable,
     CorePublicDirectoryUpgradeable
 {
@@ -20,6 +18,7 @@ contract PublicDirectoryUpgradeable is
     }
 
     function initialize() public initializer {
+        __CorePublicDirectoryUpgradeable_init();
         __Ownable_init();
         __UUPSUpgradeable_init();
     }

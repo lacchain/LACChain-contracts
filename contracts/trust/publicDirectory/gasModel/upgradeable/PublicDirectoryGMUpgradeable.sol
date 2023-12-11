@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "../../../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
@@ -10,7 +9,6 @@ import "../../generic/upgradeable/CorePublicDirectoryUpgradeable.sol";
 
 contract PublicDirectoryGMUpgradeable is
     Initializable,
-    OwnableUpgradeable,
     UUPSUpgradeable,
     BaseRelayRecipientUpgradeable,
     CorePublicDirectoryUpgradeable
@@ -21,6 +19,7 @@ contract PublicDirectoryGMUpgradeable is
     }
 
     function initialize(address trustedForwarderAddress) public initializer {
+        __CorePublicDirectoryUpgradeable_init();
         __BaseRelayRecipient_init(trustedForwarderAddress);
         __Ownable_init();
         __UUPSUpgradeable_init();
@@ -41,14 +40,6 @@ contract PublicDirectoryGMUpgradeable is
         override(BaseRelayRecipientUpgradeable, ContextUpgradeable)
         returns (address sender)
     {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
+        return BaseRelayRecipientUpgradeable._msgSender();
     }
 }

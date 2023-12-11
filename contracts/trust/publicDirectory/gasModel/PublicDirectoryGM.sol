@@ -21,14 +21,6 @@ contract PublicDirectoryGM is PublicDirectory, BaseRelayRecipient {
         override(BaseRelayRecipient, Context)
         returns (address sender)
     {
-        bytes memory bytesSender;
-        bool success;
-        (success, bytesSender) = trustedForwarder.staticcall(
-            abi.encodeWithSignature("getMsgSender()")
-        );
-
-        require(success, "SCF");
-
-        return abi.decode(bytesSender, (address));
+        return BaseRelayRecipient._msgSender();
     }
 }
