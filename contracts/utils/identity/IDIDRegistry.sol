@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: APACHE-2.0
 
 pragma solidity 0.8.18;
 
@@ -32,7 +32,7 @@ interface IDIDRegistry {
         uint validTo,
         uint changeTime,
         uint previousChange,
-        bool reason
+        bool compromised
     );
 
     function getControllers(

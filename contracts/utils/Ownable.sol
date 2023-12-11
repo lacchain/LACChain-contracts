@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.18;
 
-import "../common/BaseRelayRecipient.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -17,7 +17,7 @@ import "../common/BaseRelayRecipient.sol";
  * `onlyOwner`, which can be applied to your functions to restrict their use to
  * the owner.
  */
-abstract contract Ownable is BaseRelayRecipient {
+abstract contract Ownable is Context {
     address private _owner;
 
     event OwnershipTransferred(

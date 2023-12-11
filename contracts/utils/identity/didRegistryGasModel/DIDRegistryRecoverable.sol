@@ -2,17 +2,28 @@
 
 pragma solidity 0.8.18;
 
-import "../SafeMath.sol";
-import "../didRegistry/DIDRegistry.sol";
+import "../didRegistry/DIDRegistryRecoverable.sol";
 import "../../../common/BaseRelayRecipient.sol";
+import "../SafeMath.sol";
 
-contract DIDRegistryGM is DIDRegistry, BaseRelayRecipient {
+contract DIDRegistryRecoverableGM is
+    DIDRegistryRecoverable,
+    BaseRelayRecipient
+{
     constructor(
         uint _minKeyRotationTime,
+        uint _maxAttempts,
+        uint _minControllers,
+        uint _resetSeconds,
         address trustedForwarderAddr
     )
-        BaseRelayRecipient(trustedForwarderAddr)
-        DIDRegistry(_minKeyRotationTime)
+        DIDRegistryRecoverable(
+            _minKeyRotationTime,
+            _maxAttempts,
+            _minControllers,
+            _resetSeconds
+        )
+        BaseRelayRecipient(trustedForwarder)
     {}
 
     /**

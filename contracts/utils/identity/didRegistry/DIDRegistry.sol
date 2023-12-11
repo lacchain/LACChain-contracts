@@ -1,11 +1,12 @@
-//SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: APACHE-2.0
 
 pragma solidity 0.8.18;
 
 import "../SafeMath.sol";
 import "../IDIDRegistry.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
-contract DIDRegistry is IDIDRegistry {
+contract DIDRegistry is IDIDRegistry, Context {
     using SafeMath for uint256;
 
     mapping(address => address[]) public controllers;
@@ -18,7 +19,7 @@ contract DIDRegistry is IDIDRegistry {
     mapping(address => uint) public nonce;
 
     uint public minKeyRotationTime;
-    uint16 public constant version = 1;
+    uint16 public constant version = 2;
 
     constructor(uint _minKeyRotationTime) {
         minKeyRotationTime = _minKeyRotationTime;
@@ -177,21 +178,21 @@ contract DIDRegistry is IDIDRegistry {
         address identity,
         address controller
     ) external override {
-        addController(identity, msg.sender, controller);
+        addController(identity, _msgSender(), controller);
     }
 
     function removeController(
         address identity,
         address controller
     ) external override {
-        removeController(identity, msg.sender, controller);
+        removeController(identity, _msgSender(), controller);
     }
 
     function changeController(
         address identity,
         address newController
     ) external override {
-        changeController(identity, msg.sender, newController);
+        changeController(identity, _msgSender(), newController);
     }
 
     function changeControllerSigned(
@@ -248,7 +249,7 @@ contract DIDRegistry is IDIDRegistry {
         bytes memory value,
         uint validity
     ) external override {
-        setAttribute(identity, msg.sender, name, value, validity);
+        setAttribute(identity, _msgSender(), name, value, validity);
     }
 
     function setAttributeSigned(
@@ -318,7 +319,7 @@ contract DIDRegistry is IDIDRegistry {
     ) external override {
         revokeAttribute(
             identity,
-            msg.sender,
+            _msgSender(),
             name,
             value,
             revokeDeltaTime,
@@ -364,11 +365,11 @@ contract DIDRegistry is IDIDRegistry {
         address identity,
         uint keyRotationTime
     ) external override {
-        enableKeyRotation(identity, msg.sender, keyRotationTime);
+        enableKeyRotation(identity, _msgSender(), keyRotationTime);
     }
 
     function disableKeyRotation(address identity) external override {
-        disableKeyRotation(identity, msg.sender);
+        disableKeyRotation(identity, _msgSender());
     }
 
     function validDelegate(
@@ -422,7 +423,7 @@ contract DIDRegistry is IDIDRegistry {
         address delegate,
         uint validity
     ) public {
-        addDelegate(identity, msg.sender, delegateType, delegate, validity);
+        addDelegate(identity, _msgSender(), delegateType, delegate, validity);
     }
 
     function addDelegateSigned(
@@ -498,7 +499,7 @@ contract DIDRegistry is IDIDRegistry {
     ) public {
         revokeDelegate(
             identity,
-            msg.sender,
+            _msgSender(),
             delegateType,
             delegate,
             revokeDeltaTime,
