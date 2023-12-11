@@ -1,40 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
-import "../IIdentityHandler.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "./IIdentityHandler.sol";
+import "../utils/EIP712/EIP712.sol";
+import "../utils/Ctx.sol";
 
-abstract contract IdentityHandlerUpgradeable is
-    Initializable,
-    ContextUpgradeable,
-    EIP712Upgradeable,
-    IIdentityHandler
-{
+abstract contract AbstractIdentityHandler is IIdentityHandler, Ctx {
     bytes32 public defaultDelegateType;
     address public defaultDidRegistry;
     mapping(address => address) public didRegistries;
     // identity => delegateType => bool
     mapping(address => mapping(bytes32 => bool)) public didDelegateTypes;
 
-    function __IdentityHandler_init(
+    function __AbstractIdentityHandler_init(
         address didRegistry,
-        bytes32 delegateType,
-        string memory name
-    ) internal onlyInitializing {
-        // version is expected to be updated if new version is released
+        bytes32 delegateType
+    ) internal {
         defaultDidRegistry = didRegistry;
         defaultDelegateType = delegateType;
-        __IdentityHandler_init_unchained(name, "1");
-    }
-
-    function __IdentityHandler_init_unchained(
-        string memory name,
-        string memory version
-    ) internal onlyInitializing {
-        __EIP712_init(name, version);
     }
 
     function _getDefaultDidRegistry() internal view returns (address) {
@@ -72,9 +55,7 @@ abstract contract IdentityHandlerUpgradeable is
         return delegate;
     }
 
-    function getDidRegistry(
-        address identity
-    ) public view returns (address didRegistryAddress) {
+    function getDidRegistry(address identity) public view returns (address) {
         address registryAddress = didRegistries[identity];
         if (registryAddress == address(0)) {
             return defaultDidRegistry;
@@ -90,6 +71,7 @@ abstract contract IdentityHandlerUpgradeable is
             "IP"
         );
         didRegistries[_msgSender()] = didRegistryAddress;
+        emit DidRegistryChange(_msgSender(), didRegistryAddress, true);
     }
 
     function removeDidRegistry() external {
@@ -107,7 +89,7 @@ abstract contract IdentityHandlerUpgradeable is
         // call didRegistry by passing the sender and the identity
         (bool success, bytes memory data) = didRegistry.staticcall(
             abi.encodeWithSignature(
-                "validDelegate(address,bytes32,address",
+                "validDelegate(address,bytes32,address)",
                 identity,
                 delegateType,
                 delegate
@@ -169,4 +151,13 @@ abstract contract IdentityHandlerUpgradeable is
         didDelegateTypes[_msgSender()][delegateType] = status;
         emit NewDelegateTypeChange(delegateType, by, status);
     }
+
+    // ########################################################################################## //
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     * Since this class is the base one used for upgradeable and non-upgradeable versions a gap is used to allow contract extension.
+     */
+    uint256[45] private __gap;
 }

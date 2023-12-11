@@ -1,16 +1,19 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./AbstractChainOfTrustUpgradeable.sol";
+import "../AbstractDelegatedChainOfTrust.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../../../../common/upgradeable/IdentityHandlerUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 
 contract ChainOfTrustUpgradeable is
     Initializable,
-    AbstractChainOfTrustUpgradeable,
-    IdentityHandlerUpgradeable,
-    UUPSUpgradeable
+    AbstractDelegatedChainOfTrust,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    EIP712Upgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -26,84 +29,50 @@ contract ChainOfTrustUpgradeable is
         address didRegistry,
         bytes32 delegateType
     ) public initializer {
-        __AbstractChainOfTrustUpgradeable_init(
+        __AbstractDelegatedChainOfTrust_init(
             chainDepth,
             did,
             rootEntityManager,
             revokeMode,
-            rootMaintainer
+            rootMaintainer,
+            didRegistry,
+            delegateType
         );
-        __IdentityHandler_init(didRegistry, delegateType, "ChainOfTrust");
+        __EIP712_init("ChainOfTrust", "1");
+        __Ownable_init();
         __UUPSUpgradeable_init();
     }
 
-    function addOrUpdateGroupMemberByDelegate(
-        address parentEntity,
-        address memberEntity,
-        string memory did,
-        uint256 period
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            parentEntity,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _addOrUpdateGroupMember(
-            parentEntity,
-            memberEntity,
-            did,
-            _getExp(period)
-        );
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner()
+        public
+        view
+        virtual
+        override(OwnableUpgradeable, Owner)
+        returns (address)
+    {
+        return OwnableUpgradeable.owner();
     }
 
-    function revokeMemberByDelegate(
-        address parentEntity,
-        address memberEntity,
-        string memory did
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            parentEntity,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMember(parentEntity, parentEntity, memberEntity, did);
-    }
-
-    function revokeMemberByRootByTheirDelegate(
-        address memberEntity,
-        string memory did
-    ) external {
-        address actor = manager[1];
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            actor,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMemberByRoot(memberEntity, did, actor);
-    }
-
-    function revokeMemberByAnyAncestorByTheirDelegate(
-        address ancestor,
-        address memberEntity,
-        string memory did
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            ancestor,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMemberByAnyAncestor(ancestor, memberEntity, did);
+    /**
+     * @dev Throws if the sender is not the owner.
+     */
+    function _checkOwner()
+        internal
+        view
+        virtual
+        override(OwnableUpgradeable, Owner)
+    {
+        OwnableUpgradeable._checkOwner();
     }
 
     function _msgSender()
         internal
         view
         virtual
-        override(ContextUpgradeable, AbstractChainOfTrustUpgradeable)
+        override(Ctx, ContextUpgradeable)
         returns (address)
     {
         return ContextUpgradeable._msgSender();
@@ -113,7 +82,7 @@ contract ChainOfTrustUpgradeable is
         internal
         view
         virtual
-        override(ContextUpgradeable, AbstractChainOfTrustUpgradeable)
+        override(Ctx, ContextUpgradeable)
         returns (bytes calldata)
     {
         return ContextUpgradeable._msgData();

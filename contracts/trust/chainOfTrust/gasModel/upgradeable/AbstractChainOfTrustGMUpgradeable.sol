@@ -19,7 +19,7 @@ contract AbstractChainOfTrustGMUpgradeable is
         uint8 revokeMode,
         bool rootMaintainer
     ) internal onlyInitializing {
-        _initVars(
+        __AbstractChainOfTrustUpgradeable_init(
             chainDepth,
             did,
             rootEntityManager,

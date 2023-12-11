@@ -17,12 +17,13 @@ contract ChainOfTrustBase is Ownable, AbstractCoreChainOfTrust {
         uint8 revokeMode,
         bool rootMaintainer
     ) {
-        depth = chainDepth;
-        memberCounter++;
-        revokeConfigMode = revokeMode;
-        _configMember(memberCounter, did, rootEntityManager);
-        isRootMaintainer = rootMaintainer;
-        _emitContractBlockChangeIfNeeded();
+        __AbstractCoreChainOfTrust_init(
+            chainDepth,
+            did,
+            rootEntityManager,
+            revokeMode,
+            rootMaintainer
+        );
     }
 
     /**

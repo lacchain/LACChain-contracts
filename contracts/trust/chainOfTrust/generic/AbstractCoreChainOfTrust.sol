@@ -8,7 +8,7 @@ import "../../../utils/Ctx.sol";
 
 abstract contract AbstractCoreChainOfTrust is Owner, Ctx, IChainOfTrustBase {
     // ########################################################################################## //
-    function _initVars(
+    function __AbstractCoreChainOfTrust_init(
         uint8 chainDepth,
         string memory did,
         address rootEntityManager,

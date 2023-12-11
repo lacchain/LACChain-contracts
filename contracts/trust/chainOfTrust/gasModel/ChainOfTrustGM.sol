@@ -1,11 +1,10 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "../../../common/IdentityHandler.sol";
-import "./ChainOfTrustBaseGM.sol";
-import "../IChainOfTrust.sol";
+import "../generic/ChainOfTrust.sol";
+import "../../../common/BaseRelayRecipient.sol";
 
-contract ChainOfTrustGM is ChainOfTrustBaseGM, IdentityHandler, IChainOfTrust {
+contract ChainOfTrustGM is ChainOfTrust, BaseRelayRecipient {
     constructor(
         address trustedForwarderAddress,
         uint8 chainDepth,
@@ -16,15 +15,16 @@ contract ChainOfTrustGM is ChainOfTrustBaseGM, IdentityHandler, IChainOfTrust {
         address didRegistry,
         bytes32 delegateType
     )
-        ChainOfTrustBaseGM(
-            trustedForwarderAddress,
+        ChainOfTrust(
             chainDepth,
             did,
             rootEntityManager,
             revokeMode,
-            rootMaintainer
+            rootMaintainer,
+            didRegistry,
+            delegateType
         )
-        IdentityHandler(didRegistry, delegateType, "ChainOfTrust")
+        BaseRelayRecipient(trustedForwarderAddress)
     {}
 
     /**
@@ -35,81 +35,9 @@ contract ChainOfTrustGM is ChainOfTrustBaseGM, IdentityHandler, IChainOfTrust {
     function _msgSender()
         internal
         view
-        override(ChainOfTrustBaseGM, Context)
+        override(ChainOfTrust, BaseRelayRecipient)
         returns (address sender)
     {
-        return ChainOfTrustBaseGM._msgSender();
-    }
-
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ChainOfTrustBase)
-        returns (bytes calldata)
-    {
-        return Context._msgData();
-    }
-
-    function addOrUpdateGroupMemberByDelegate(
-        address parentEntity,
-        address memberEntity,
-        string memory did,
-        uint256 period
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            parentEntity,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _addOrUpdateGroupMember(
-            parentEntity,
-            memberEntity,
-            did,
-            _getExp(period)
-        );
-    }
-
-    function revokeMemberByDelegate(
-        address parentEntity,
-        address memberEntity,
-        string memory did
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            parentEntity,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMember(parentEntity, parentEntity, memberEntity, did);
-    }
-
-    function revokeMemberByRootByTheirDelegate(
-        address memberEntity,
-        string memory did
-    ) external {
-        address actor = manager[1];
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            actor,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMemberByRoot(memberEntity, did, actor);
-    }
-
-    function revokeMemberByAnyAncestorByTheirDelegate(
-        address ancestor,
-        address memberEntity,
-        string memory did
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            ancestor,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMemberByAnyAncestor(ancestor, memberEntity, did);
+        return BaseRelayRecipient._msgSender();
     }
 }

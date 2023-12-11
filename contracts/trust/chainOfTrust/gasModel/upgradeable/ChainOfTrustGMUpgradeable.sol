@@ -1,16 +1,20 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./AbstractChainOfTrustGMUpgradeable.sol";
+import "../../generic/AbstractDelegatedChainOfTrust.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../../../../common/upgradeable/IdentityHandlerUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "../../../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 
 contract ChainOfTrustGMUpgradeable is
     Initializable,
-    AbstractChainOfTrustGMUpgradeable,
-    IdentityHandlerUpgradeable,
-    UUPSUpgradeable
+    AbstractDelegatedChainOfTrust,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    EIP712Upgradeable,
+    BaseRelayRecipientUpgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -27,99 +31,61 @@ contract ChainOfTrustGMUpgradeable is
         address didRegistry,
         bytes32 delegateType
     ) public initializer {
-        __AbstractChainOfTrustGMUpgradeable_init(
-            trustedForwarderAddress,
+        __AbstractDelegatedChainOfTrust_init(
             chainDepth,
             did,
             rootEntityManager,
             revokeMode,
-            rootMaintainer
+            rootMaintainer,
+            didRegistry,
+            delegateType
         );
-        __IdentityHandler_init(didRegistry, delegateType, "ChainOfTrust");
+        __EIP712_init("ChainOfTrust", "1");
+        __BaseRelayRecipient_init(trustedForwarderAddress);
+        __Ownable_init();
         __UUPSUpgradeable_init();
     }
 
-    function addOrUpdateGroupMemberByDelegate(
-        address parentEntity,
-        address memberEntity,
-        string memory did,
-        uint256 period
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            parentEntity,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _addOrUpdateGroupMember(
-            parentEntity,
-            memberEntity,
-            did,
-            _getExp(period)
-        );
-    }
-
-    function revokeMemberByDelegate(
-        address parentEntity,
-        address memberEntity,
-        string memory did
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            parentEntity,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMember(parentEntity, parentEntity, memberEntity, did);
-    }
-
-    function revokeMemberByRootByTheirDelegate(
-        address memberEntity,
-        string memory did
-    ) external {
-        address actor = manager[1];
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            actor,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMemberByRoot(memberEntity, did, actor);
-    }
-
-    function revokeMemberByAnyAncestorByTheirDelegate(
-        address ancestor,
-        address memberEntity,
-        string memory did
-    ) external {
-        _validateDelegate(
-            _getDefaultDidRegistry(),
-            ancestor,
-            _getDefaultDelegateType(),
-            _msgSender()
-        );
-        _revokeMemberByAnyAncestor(ancestor, memberEntity, did);
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner()
+        public
+        view
+        virtual
+        override(OwnableUpgradeable, Owner)
+        returns (address)
+    {
+        return OwnableUpgradeable.owner();
     }
 
     /**
-     * return the sender of this call.
-     * if the call came through our Relay Hub, return the original sender.
-     * should be used in the contract anywhere instead of msg.sender
+     * @dev Throws if the sender is not the owner.
      */
+    function _checkOwner()
+        internal
+        view
+        virtual
+        override(OwnableUpgradeable, Owner)
+    {
+        OwnableUpgradeable._checkOwner();
+    }
+
     function _msgSender()
         internal
         view
-        override(AbstractChainOfTrustGMUpgradeable, ContextUpgradeable)
-        returns (address sender)
+        virtual
+        override(Ctx, ContextUpgradeable, BaseRelayRecipientUpgradeable)
+        returns (address)
     {
-        return AbstractChainOfTrustGMUpgradeable._msgSender();
+        return BaseRelayRecipientUpgradeable._msgSender();
     }
 
     function _msgData()
         internal
         view
         virtual
-        override(AbstractChainOfTrustGMUpgradeable, ContextUpgradeable)
+        override(Ctx, ContextUpgradeable)
         returns (bytes calldata)
     {
         return ContextUpgradeable._msgData();
