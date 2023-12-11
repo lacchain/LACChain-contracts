@@ -1,18 +1,5 @@
 # Deployment Guide
 
-## Deploying a contract example:
-
-```sh
- yarn hardhat run --network lacchain scripts/deployExample.ts
-```
-
-Output:
-
-```sh
-Using Base Relay Address: 0xa4B5eE2906090ce2cDbf5dfff944db26f397037D
-migrations Instance successfully deployed at address: 0xE74B710bCC51fE2B290b8653F9754125f39e4Dd3
-```
-
 ## Deploying any of the other contracts:
 
 ```sh
@@ -24,7 +11,6 @@ migrations Instance successfully deployed at address: 0xE74B710bCC51fE2B290b8653
 ## Deploying upgradeable contracts:
 
 ```sh
-env DEBUG='@openzeppelin:*' yarn hardhat run --network lacchain scripts/upgradeable/deployExampleUpgradeable.ts # deploys a simple upgradeable contract
 env DEBUG='@openzeppelin:*' yarn hardhat run --network lacchain scripts/upgradeable/deployChainOfTrustBaseUpgradeable.ts # deploys a chain of trust base upgradeable contract
 env DEBUG='@openzeppelin:*' yarn hardhat run --network lacchain scripts/upgradeable/deployChainOfTrustUpgradeable.ts # deploys a chain of trust didRegistry-integrated upgradeable contract
 env DEBUG='@openzeppelin:*' yarn hardhat run --network lacchain scripts/upgradeable/deployPublicDirectoryUpgradeable.ts # deploys upgradeable version of public directory smart contract
