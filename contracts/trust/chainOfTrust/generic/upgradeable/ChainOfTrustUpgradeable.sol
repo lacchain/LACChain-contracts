@@ -4,16 +4,13 @@ pragma solidity 0.8.18;
 import "../AbstractDelegatedChainOfTrust.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 
 contract ChainOfTrustUpgradeable is
     Initializable,
     AbstractDelegatedChainOfTrust,
     UUPSUpgradeable,
-    OwnableUpgradeable,
-    EIP712Upgradeable
+    OwnableUpgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -38,7 +35,6 @@ contract ChainOfTrustUpgradeable is
             didRegistry,
             delegateType
         );
-        __EIP712_init("ChainOfTrust", "1");
         __Ownable_init();
         __UUPSUpgradeable_init();
     }

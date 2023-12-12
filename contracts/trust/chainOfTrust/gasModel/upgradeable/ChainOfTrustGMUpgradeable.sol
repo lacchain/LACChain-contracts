@@ -13,7 +13,6 @@ contract ChainOfTrustGMUpgradeable is
     AbstractDelegatedChainOfTrust,
     UUPSUpgradeable,
     OwnableUpgradeable,
-    EIP712Upgradeable,
     BaseRelayRecipientUpgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -40,7 +39,6 @@ contract ChainOfTrustGMUpgradeable is
             didRegistry,
             delegateType
         );
-        __EIP712_init("ChainOfTrust", "1");
         __BaseRelayRecipient_init(trustedForwarderAddress);
         __Ownable_init();
         __UUPSUpgradeable_init();

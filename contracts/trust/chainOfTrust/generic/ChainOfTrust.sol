@@ -6,11 +6,9 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "./AbstractDelegatedChainOfTrust.sol";
 import "./AbstractCoreChainOfTrust.sol";
 import "../../../common/AbstractIdentityHandler.sol";
-
-import "../../../utils/EIP712/EIP712.sol";
 import "../../../utils/Ownable.sol";
 
-contract ChainOfTrust is AbstractDelegatedChainOfTrust, EIP712, Ownable {
+contract ChainOfTrust is AbstractDelegatedChainOfTrust, Ownable {
     constructor(
         uint8 chainDepth,
         string memory did,
@@ -19,7 +17,7 @@ contract ChainOfTrust is AbstractDelegatedChainOfTrust, EIP712, Ownable {
         bool rootMaintainer,
         address didRegistry,
         bytes32 delegateType
-    ) EIP712("ChainOfTrust", "1") {
+    ) {
         __AbstractDelegatedChainOfTrust_init(
             chainDepth,
             did,

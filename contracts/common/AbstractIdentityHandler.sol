@@ -2,7 +2,6 @@
 pragma solidity 0.8.18;
 
 import "./IIdentityHandler.sol";
-import "../utils/EIP712/EIP712.sol";
 import "../utils/Ctx.sol";
 
 abstract contract AbstractIdentityHandler is IIdentityHandler, Ctx {

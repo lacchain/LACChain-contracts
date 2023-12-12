@@ -16,7 +16,7 @@ abstract contract AbstractCoreChainOfTrust is Owner, Ctx, IChainOfTrustBase {
         bool rootMaintainer
     ) internal {
         depth = chainDepth;
-        memberCounter++;
+        memberCounter++; // the root manager always get the id = 1
         revokeConfigMode = revokeMode;
         _configMember(memberCounter, did, rootEntityManager);
         isRootMaintainer = rootMaintainer;
