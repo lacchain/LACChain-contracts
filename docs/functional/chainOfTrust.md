@@ -12,7 +12,6 @@ Chain of Trust smart contract is part of a stack of contracts that comprise Chai
 
 - Chain of Trust can be used as a reference which means applications using this component can use additional custom lists to make further filtering over a particular entity.
 - The chain of trust concept starts with an entity that is set as the root entity. The root entity is set in the zero level of the chain of trust (The root level)
-- At the zero level of trust (root level) there can be more than one entity.
 - The root entity can add more members in a sort of trusted relationship by which the first one (parent entity) acknowledges the added entity (child entity) as a trusted member.
 - Resolving whether a child entity is trusted depends on the number of steps ("levels") taken to reach the root entity.
 - A child entity is trusted if "levels" is less or equal than the maximum depth" (an integer positive number defined on contract creation).
@@ -55,7 +54,7 @@ Chan of Trust smart contract is architecturally composed by the follings:
 
 In the following diagram depth=3 is exemplified
 
-<img src="../img/CoT.png" width="1100">
+<img src="../img/CoT-trusted-hierachy.png" width="1100">
 
 In the following diagram different groups are added at the same level, this shows how different entities endorse trust at different levels.
 
