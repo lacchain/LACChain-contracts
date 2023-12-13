@@ -47,10 +47,10 @@ Chan of Trust smart contract is architecturally composed by the follings:
 
 ## Smart contracts Methods and Emmitted events
 
-- [Chain of Trust Base contract](../../contracts/chainOfTrust/IChainOfTrustBase.sol)
-- [Chain of Trust](../../contracts/chainOfTrust/IChainOfTrust.sol)
+- [Chain of Trust Base contract interface](../../contracts/chainOfTrust/IChainOfTrustBase.sol)
+- [Chain of Trust interface](../../contracts/chainOfTrust/IChainOfTrust.sol)
 
-## Didactic Diagrams
+## Didactic Diagram
 
 In the following diagram depth=3 is exemplified
 
