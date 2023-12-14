@@ -2,7 +2,7 @@ import { ethers, lacchain } from "hardhat";
 
 async function main() {
   const accounts = lacchain.getSigners();
-  const artifactName = "Migrations";
+  const artifactName = "PublicDirectoryGM";
   const Artifact = await ethers.getContractFactory(artifactName, accounts[0]);
   console.log("Using Base Relay Address:", lacchain.baseRelayAddress);
   const instance = await lacchain.deployContract(
@@ -13,7 +13,6 @@ async function main() {
     `${artifactName} instance successfully deployed at address: ` +
       instance.address
   );
-  // const contract = Artifact.attach(instance.address);
 }
 
 main().catch((error) => {

@@ -3,10 +3,10 @@ import { Wallet } from "ethers";
 async function main() {
   const accounts = lacchain.getSigners();
   // update vars accordinly before continuing
-  const artifactName = "ChainOfTrustBaseUpgradeable";
+  const artifactName = "PublicDirectory";
   const curentOwner = accounts[0];
-  const contractAddress = "0x0449fa5FeD1784794b3e6024cDADF94fAF992384";
-  const newOwnerAddress = accounts[1].address;
+  const contractAddress = "0x67319e72eE1c8aca3435b7748Be547cF17c5e384";
+  const newOwnerAddress = "0xD751E0A91A4a431ea49271B56cB7dfB0d5aF394B"; // accounts[1].address;
   // set new owner
   transferOwnership(
     curentOwner,

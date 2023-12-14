@@ -13,11 +13,6 @@
 - fixed errors in unit tests
 - fix contracts version to "2"
 
-### Bug Fixes
-
-- Fixes incorrect encoded value for 'domain' attribute in proof.
-- Update lacchain trust dependency to version 0.0.7 (fix revoke jwk case)
-
-### 1
+### 1.0.0
 
 - Add gas model Public Directory and Chain of Trust contracts
