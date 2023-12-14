@@ -4,7 +4,7 @@ pragma solidity 0.8.18;
 import "./AbstractCorePublicDirectory.sol";
 import "../../../utils/Ownable.sol";
 
-contract PublicDirectory is AbstractCorePublicDirectory, Ownable {
+contract PublicDirectory is Ownable, AbstractCorePublicDirectory {
     constructor() Ownable() {}
 
     /**

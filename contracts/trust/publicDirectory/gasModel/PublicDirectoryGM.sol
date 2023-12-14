@@ -5,7 +5,7 @@ import "../generic/PublicDirectory.sol";
 import "../../../utils/Ownable.sol";
 import "../../../common/BaseRelayRecipient.sol";
 
-contract PublicDirectoryGM is PublicDirectory, BaseRelayRecipient {
+contract PublicDirectoryGM is BaseRelayRecipient, PublicDirectory {
     constructor(
         address trustedForwarderAddress
     ) BaseRelayRecipient(trustedForwarderAddress) {}

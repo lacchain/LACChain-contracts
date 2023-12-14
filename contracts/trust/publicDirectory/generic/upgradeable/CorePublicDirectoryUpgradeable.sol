@@ -5,8 +5,8 @@ import "../AbstractCorePublicDirectory.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract CorePublicDirectoryUpgradeable is
-    AbstractCorePublicDirectory,
-    OwnableUpgradeable
+    OwnableUpgradeable,
+    AbstractCorePublicDirectory
 {
     /**
      * @dev Returns the address of the current owner.

@@ -3,10 +3,10 @@ import { expect } from "chai";
 import { ethers, lacchain } from "hardhat";
 import { sleep } from "../util";
 
-const artifactName = "ChainOfTrustBase";
+const artifactName = "ChainOfTrustBaseGM";
 describe(artifactName, function () {
   const [owner, rootManager, member1, member2, member3] = lacchain.getSigners();
-  const depth = 3;
+  const depth = 3; // 4 levels / 3 steps
   const did =
     "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C";
 
@@ -30,7 +30,7 @@ describe(artifactName, function () {
     return instance.address;
   }
 
-  describe("Chain of Trust Base", () => {
+  describe("Chain of Trust Base Gas Model", () => {
     it("Should set right values on artifact deployment", async () => {
       const rootManagerAddress = rootManager.address;
       const contractAddress = await deployChainOfTrust(

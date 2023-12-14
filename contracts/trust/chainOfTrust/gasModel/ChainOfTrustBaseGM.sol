@@ -4,7 +4,7 @@ pragma solidity 0.8.18;
 import "../../../common/BaseRelayRecipient.sol";
 import "../generic/ChainOfTrustBase.sol";
 
-contract ChainOfTrustBaseGM is ChainOfTrustBase, BaseRelayRecipient {
+contract ChainOfTrustBaseGM is BaseRelayRecipient, ChainOfTrustBase {
     constructor(
         address trustedForwarderAddress,
         uint8 chainDepth,

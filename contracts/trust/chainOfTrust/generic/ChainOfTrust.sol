@@ -8,7 +8,7 @@ import "./AbstractCoreChainOfTrust.sol";
 import "../../../common/AbstractIdentityHandler.sol";
 import "../../../utils/Ownable.sol";
 
-contract ChainOfTrust is AbstractDelegatedChainOfTrust, Ownable {
+contract ChainOfTrust is Ownable, AbstractDelegatedChainOfTrust {
     constructor(
         uint8 chainDepth,
         string memory did,

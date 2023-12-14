@@ -10,10 +10,10 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable
 
 contract ChainOfTrustGMUpgradeable is
     Initializable,
+    BaseRelayRecipientUpgradeable,
     AbstractDelegatedChainOfTrust,
     UUPSUpgradeable,
-    OwnableUpgradeable,
-    BaseRelayRecipientUpgradeable
+    OwnableUpgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

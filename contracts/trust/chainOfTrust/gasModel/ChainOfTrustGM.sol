@@ -4,7 +4,7 @@ pragma solidity 0.8.18;
 import "../generic/ChainOfTrust.sol";
 import "../../../common/BaseRelayRecipient.sol";
 
-contract ChainOfTrustGM is ChainOfTrust, BaseRelayRecipient {
+contract ChainOfTrustGM is BaseRelayRecipient, ChainOfTrust {
     constructor(
         address trustedForwarderAddress,
         uint8 chainDepth,
@@ -15,6 +15,7 @@ contract ChainOfTrustGM is ChainOfTrust, BaseRelayRecipient {
         address didRegistry,
         bytes32 delegateType
     )
+        BaseRelayRecipient(trustedForwarderAddress)
         ChainOfTrust(
             chainDepth,
             did,
@@ -24,7 +25,6 @@ contract ChainOfTrustGM is ChainOfTrust, BaseRelayRecipient {
             didRegistry,
             delegateType
         )
-        BaseRelayRecipient(trustedForwarderAddress)
     {}
 
     /**
