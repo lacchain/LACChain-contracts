@@ -7,8 +7,8 @@ import "../AbstractCoreChainOfTrust.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract AbstractChainOfTrustUpgradeable is
-    AbstractCoreChainOfTrust,
-    OwnableUpgradeable
+    OwnableUpgradeable,
+    AbstractCoreChainOfTrust
 {
     /**
      * @dev Returns the address of the current owner.

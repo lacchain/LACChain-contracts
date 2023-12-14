@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./AbstractChainOfTrustGMUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+import "../../../../common/upgradeable/BaseRelayRecipientUpgradeable.sol";
+import "../../generic/upgradeable/AbstractChainOfTrustUpgradeable.sol";
+
 contract ChainOfTrustBaseGMUpgradeable is
     Initializable,
-    AbstractChainOfTrustGMUpgradeable,
+    BaseRelayRecipientUpgradeable,
+    AbstractChainOfTrustUpgradeable,
     UUPSUpgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -23,8 +26,8 @@ contract ChainOfTrustBaseGMUpgradeable is
         uint8 revokeMode,
         bool rootMaintainer
     ) public initializer {
-        __AbstractChainOfTrustGMUpgradeable_init(
-            trustedForwarderAddress,
+        __BaseRelayRecipient_init(trustedForwarderAddress);
+        __AbstractChainOfTrustUpgradeable_init(
             chainDepth,
             did,
             rootEntityManager,
@@ -32,6 +35,31 @@ contract ChainOfTrustBaseGMUpgradeable is
             rootMaintainer
         );
         __UUPSUpgradeable_init();
+    }
+
+    /**
+     * return the sender of this call.
+     * if the call came through our Relay Hub, return the original sender.
+     * should be used in the contract anywhere instead of msg.sender
+     */
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(BaseRelayRecipientUpgradeable, AbstractChainOfTrustUpgradeable)
+        returns (address sender)
+    {
+        return BaseRelayRecipientUpgradeable._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, AbstractChainOfTrustUpgradeable)
+        returns (bytes calldata)
+    {
+        return ContextUpgradeable._msgData();
     }
 
     function _authorizeUpgrade(
