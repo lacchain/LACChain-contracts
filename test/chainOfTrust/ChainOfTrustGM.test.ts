@@ -5,7 +5,7 @@ import { sleep } from "../util";
 import { deployDidRegistry } from "../identity/Identity.test";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
-const artifactName = "ChainOfTrust";
+const artifactName = "ChainOfTrustGM";
 describe(artifactName, function () {
   const delegateType = keccak256(toUtf8Bytes("DefaultDelegateType"));
   const [owner, rootManager, member1, member2, member3] = lacchain.getSigners();
@@ -55,7 +55,7 @@ describe(artifactName, function () {
     it("Should update a member in my Group (TL) by delegate", async () => {
       const didRegistryContractAddress = await deployDidRegistry();
       const DidRegistryArtifact = await ethers.getContractFactory(
-        "DIDRegistry",
+        "DIDRegistryGM",
         rootManager
       );
       const rootManagerDidRegistryContract = DidRegistryArtifact.attach(
@@ -81,23 +81,14 @@ describe(artifactName, function () {
       const contractAddress = await deployChainOfTrust(
         depth,
         did,
-        rootManagerAddress
+        rootManagerAddress,
+        0,
+        false,
+        didRegistryContractAddress
       );
-      const unauthorizedArtifact = await ethers.getContractFactory(
-        artifactName,
-        member3
-      );
-      const unauthorizedContract = unauthorizedArtifact.attach(contractAddress);
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
       const member2Address = member2.address;
-      result = await unauthorizedContract.addOrUpdateGroupMemberByDelegate(
-        rootManagerAddress,
-        member2Address,
-        member2Did,
-        86400 * 365
-      );
-      expect(result).not.to.emit(unauthorizedContract, "GroupMemberChanged");
 
       // now should passs
       const delegateArtifact = await ethers.getContractFactory(
@@ -111,7 +102,7 @@ describe(artifactName, function () {
         member2Did,
         86400 * 365
       );
-      expect(result)
+      await expect(result)
         .to.emit(delegateContract, "GroupMemberChanged")
         .withArgs(
           rootManagerAddress,
@@ -121,6 +112,27 @@ describe(artifactName, function () {
           anyValue,
           anyValue
         );
+      // must fail
+      const unauthorizedArtifact = await ethers.getContractFactory(
+        artifactName,
+        member3
+      );
+      const unauthorizedContract = unauthorizedArtifact.attach(contractAddress);
+      try {
+        result = await unauthorizedContract.addOrUpdateGroupMemberByDelegate(
+          rootManagerAddress,
+          member2Address,
+          member2Did,
+          86400 * 365
+        );
+        await expect(result).not.to.emit(
+          unauthorizedContract,
+          "GroupMemberChanged"
+        );
+      } catch (e) {
+        return;
+      }
+      throw new Error("Should not be reached");
     });
 
     it("Should revoke a member in my Group (TL) by delegate", async () => {
@@ -152,25 +164,17 @@ describe(artifactName, function () {
       const contractAddress = await deployChainOfTrust(
         depth,
         did,
-        rootManagerAddress
+        rootManagerAddress,
+        0,
+        false,
+        didRegistryContractAddress
       );
-      const unauthorizedArtifact = await ethers.getContractFactory(
-        artifactName,
-        member3
-      );
-      const unauthorizedContract = unauthorizedArtifact.attach(contractAddress);
+
       const member2Did =
         "did:web:lacchain.id:6EArrNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb3B";
       const member2Address = member2.address;
-      result = await unauthorizedContract.addOrUpdateGroupMemberByDelegate(
-        rootManagerAddress,
-        member2Address,
-        member2Did,
-        86400 * 365
-      );
-      expect(result).not.to.emit(unauthorizedContract, "GroupMemberChanged");
 
-      // now should passs
+      // should passs
       const delegateArtifact = await ethers.getContractFactory(
         artifactName,
         member1
@@ -188,16 +192,35 @@ describe(artifactName, function () {
         member2Address,
         member2Did
       );
-      expect(result)
+      await expect(result)
         .to.emit(delegateContract, "GroupMemberRevoked")
         .withArgs(
+          rootManagerAddress,
           rootManagerAddress,
           member2Address,
           member2Did,
           anyValue,
-          anyValue,
           anyValue
         );
+      // must fail
+      const unauthorizedArtifact = await ethers.getContractFactory(
+        artifactName,
+        member3
+      );
+      const unauthorizedContract = unauthorizedArtifact.attach(contractAddress);
+
+      try {
+        result = await unauthorizedContract.addOrUpdateGroupMemberByDelegate(
+          rootManagerAddress,
+          member2Address,
+          member2Did,
+          86400 * 365
+        );
+        expect(result).not.to.emit(unauthorizedContract, "GroupMemberChanged");
+      } catch (e) {
+        return;
+      }
+      throw new Error("Should not be reached");
     });
   });
 });

@@ -6,7 +6,7 @@ import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { IPublicDirectory, PublicDirectory } from "../../typechain-types";
 import { encode } from "cbor";
 
-const artifactName = "PublicDirectory";
+const artifactName = "PublicDirectoryGM";
 let publicDirectoryInstance: PublicDirectory;
 const [owner, cotAddressExample] = lacchain.getSigners();
 const mockCoTAddress = "0xA1130263713dA838E5a348C33606841d8ee273BC";
@@ -25,7 +25,7 @@ describe(artifactName, function () {
     await deployPublicDirectory();
   });
 
-  describe("Public Directory", () => {
+  describe("Public Directory - Gas Model", () => {
     it("Should setright values on contract deployment", async function () {
       expect(await publicDirectoryInstance.owner()).to.equal(owner.address);
     });
@@ -359,6 +359,7 @@ describe(artifactName, function () {
       await addMockMember(did2, cotAddr);
     });
     it("Should add member with ebsi raw data", async function () {
+      // 380,286 gas
       const did1 =
         "did:web:lacchain.id:3DArjNYv1q235YgLb2F7HEQmtmNncxu7qdXVnXvPx22e3UsX2RgNhHyhvZEw1Gb5C";
       const cotAddr = cotAddressExample.address;
