@@ -8,7 +8,7 @@ abstract contract AbstractCorePublicDirectory is IPublicDirectory, Owner {
     function __AbstractCorePublicDirectory_init() internal {}
 
     // ########################################################################################## //
-    uint16 public constant version = 1;
+    uint16 public constant version = 2;
     mapping(uint256 => member) public memberDetails;
     mapping(address => uint256) public id;
     uint256 public memberCounter;

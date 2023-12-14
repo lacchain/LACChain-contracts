@@ -23,7 +23,7 @@ abstract contract AbstractCoreChainOfTrust is Owner, Ctx, IChainOfTrustBase {
         _emitContractBlockChangeIfNeeded();
     }
 
-    uint16 public constant version = 1;
+    uint16 public constant version = 2;
     uint256 public memberCounter;
     // entityManager => (gId, did)
     mapping(address => groupDetail) public group;
