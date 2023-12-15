@@ -18,10 +18,12 @@ contract PublicDirectoryGMUpgradeable is
         _disableInitializers();
     }
 
+    /**
+     * BaseRelayRecipeint MUST be called before CorePublicDirectory_init since the last one initialized OwnableUpgradeable.
+     */
     function initialize(address trustedForwarderAddress) public initializer {
-        __CorePublicDirectoryUpgradeable_init();
         __BaseRelayRecipient_init(trustedForwarderAddress);
-        __Ownable_init();
+        __CorePublicDirectoryUpgradeable_init();
         __UUPSUpgradeable_init();
     }
 
