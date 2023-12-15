@@ -34,3 +34,9 @@ The following diagram shows the comprising elements of a registry.
 Contracts as mentioned in [smart contracts sections](./publicDirectory.md#smart-contracts) are available for any EVM compatible network as well as for LACChain Gas Model Compatible Networks. For any of those cases there are two flavors of contracts availble, upgradeable and non-upgradeable contracts. Let's illustrate it:
 
 <img src="../img/pd-available-contracts.png" width=60%>
+
+## Contracts Diagram
+
+The following picture shows the different subcomponents that comprises the Public Directory smart contracts.
+
+<img src="../img/pd-class-diagram.png">
